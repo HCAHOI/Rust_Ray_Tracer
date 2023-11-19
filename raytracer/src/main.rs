@@ -3,6 +3,7 @@
 mod material;
 mod scene;
 mod vec3;
+mod color;
 
 use image::{ImageBuffer, Rgb, RgbImage};
 use indicatif::ProgressBar;
@@ -22,22 +23,8 @@ impl World {
     }
 }
 
-fn is_ci() -> bool {
-    option_env!("CI").unwrap_or_default() == "true"
-}
-
 fn main() {
-    // get environment variable CI, which is true for GitHub Action
-    let is_ci = is_ci();
-
-    // jobs: split image into how many parts
-    // workers: maximum allowed concurrent running threads
-    let (n_jobs, n_workers): (usize, usize) = if is_ci { (32, 2) } else { (16, 2) };
-
-    println!(
-        "CI: {}, using {} jobs and {} workers",
-        is_ci, n_jobs, n_workers
-    );
+    let (n_jobs, n_workers): (usize, usize) = (16, 16);
 
     let height = 512;
     let width = 1024;
