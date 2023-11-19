@@ -1,4 +1,3 @@
-
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Debug, PartialEq, Copy)]
@@ -7,9 +6,8 @@ pub struct Vec3 {
     pub y: f64,
     pub z: f64,
 }
-pub use Vec3 as Color;
-pub use Vec3 as Point3;
 use rand::Rng;
+pub type Point3 = Vec3;
 
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
@@ -45,8 +43,8 @@ impl Vec3 {
         }
     }
 
-    pub fn dot(u: Vec3, v: Vec3) -> f64 {
-        u.x * v.x + u.y * v.y + u.z * v.z
+    pub fn dot(&self, other: Vec3) -> f64 {
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 
     pub fn cross(u: Vec3, v: Vec3) -> Self {
@@ -99,11 +97,11 @@ impl Vec3 {
     }
 
     pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
-        v - n * Vec3::dot(v, n) * 2.0
+        v - n * v.dot(n) * 2.0
     }
 
     pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
-        let cos_theta = Vec3::dot(-uv, n);
+        let cos_theta = (-uv).dot(n);
         let r_out_perp = (uv + n * cos_theta) * etai_over_etat;
         let r_out_parallel = -n * (1.0 - r_out_perp.squared_length()).abs().sqrt();
         r_out_perp + r_out_parallel
@@ -230,6 +228,14 @@ impl Mul<f64> for Vec3 {
             y: self.y * other,
             z: self.z * other,
         }
+    }
+}
+
+impl Mul<Vec3> for f64 {
+    type Output = Vec3;
+
+    fn mul(self, other: Vec3) -> Vec3 {
+        other * self
     }
 }
 
