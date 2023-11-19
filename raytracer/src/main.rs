@@ -1,135 +1,77 @@
-#![allow(clippy::float_cmp)]
-
+mod camera;
+mod cfg;
 mod color;
-mod material;
+mod hit;
+mod mat;
 mod ray;
 mod scene;
 mod sphere;
 mod utils;
 mod vec3;
 
+use camera::Camera;
+use cfg::*;
 use color::Color;
-use image::{ImageBuffer, Rgb, RgbImage};
+use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
-use ray::Ray;
-use scene::example_scene;
-use sphere::hit_sphere;
-use std::sync::mpsc::channel;
-use std::sync::Arc;
-use threadpool::ThreadPool;
-use vec3::Point3;
-pub use vec3::Vec3;
+use rand::Rng;
+use rayon::prelude::*;
+use vec3::{Point3, Vec3};
 
-pub struct World {
-    pub height: u32,
-}
-
-impl World {
-    pub fn color(&self, _: u32, y: u32) -> Color {
-        Color {
-            x: (y as f64 / self.height as f64),
-            y: (y as f64 / self.height as f64),
-            z: (y as f64 / self.height as f64),
-        }
-    }
-}
-
-pub fn ray_color(ray: &Ray) -> Color {
-    if hit_sphere(Point3::new(0.0, 0.0, -1.0), 0.5, ray) {
-        return Color::new(1.0, 0.0, 0.0);
-    }
-
-    let unit_direction = ray.direction().unit();
-    let t = 0.5 * (unit_direction.y + 1.0);
-    (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
-}
+use crate::{color::ray_color, scene::scene_select};
 
 fn main() {
-    let (n_jobs, n_workers): (usize, usize) = (16, 16);
-
-    // create a channel to send objects between threads
-    let (tx, rx) = channel();
-    let pool = ThreadPool::new(n_workers);
-
-    let bar = ProgressBar::new(n_jobs as u64);
-
-    // use Arc to pass one instance of World to multiple threads
-    let world = Arc::new(example_scene());
-
-    // Image
-
-    let aspect_ratio = 16.0 / 9.0;
-    let image_width = 400;
-
-    // Calculate the image height, and ensure that it's at least 1.
-    let image_height = (image_width as f64 / aspect_ratio) as u32;
+    // World
+    let world = scene_select(2);
 
     // Camera
+    let lookfrom = Point3::new(13.0, 2.0, 3.0);
+    let lookat = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        20.0,
+        ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
+        0.2,
+        0.6,
+    );
 
-    let focal_length = 1.0;
-    let viewport_height = 2.0;
-    let viewport_width = viewport_height * aspect_ratio;
-    let camera_center = Point3::zero();
+    let mut img: RgbImage = ImageBuffer::new(IMAGE_WIDTH as u32, IMAGE_HEIGHT as u32);
+    let bar = ProgressBar::new(IMAGE_HEIGHT as u64);
 
-    // Calculate the vectors across the horizontal and down the vertical viewport edges.
-    let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-    let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+    for j in 0..IMAGE_HEIGHT {
+        for i in 0..IMAGE_WIDTH {
+            let pixel_color: Color = (0..SAMPLES_PER_PIXEL)
+                .into_par_iter()
+                .map(|_sample| {
+                    let mut rng = rand::thread_rng();
+                    let random_u = rng.gen::<f64>();
+                    let random_v = rng.gen::<f64>();
 
-    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-    let pixel_delta_u = viewport_u / image_width as f64;
-    let pixel_delta_v = viewport_v / image_height as f64;
+                    let u = ((i as f64) + random_u) / ((IMAGE_WIDTH - 1) as f64);
+                    let v = ((j as f64) + random_v) / ((IMAGE_HEIGHT - 1) as f64);
 
-    // Calculate the location of the upper left pixel.
-    let viewport_upper_left =
-        camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
-    let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
-
-    for i in 0..n_jobs {
-        let tx = tx.clone();
-        let world_ptr = world.clone();
-        pool.execute(move || {
-            // here, we render some of the rows of image in one thread
-            let row_begin = image_height as usize * i / n_jobs;
-            let row_end = image_height as usize * (i + 1) / n_jobs;
-            let render_height = row_end - row_begin;
-            let mut img: RgbImage = ImageBuffer::new(image_width, render_height as u32);
-            for x in 0..image_width {
-                // img_y is the row in partial rendered image
-                // y is real position in final image
-                for (img_y, y) in (row_begin..row_end).enumerate() {
-                    let pixel_center =
-                        pixel00_loc + (x as f64 * pixel_delta_u) + (y as f64 * pixel_delta_v);
-                    let ray_direction = pixel_center - camera_center;
-                    let r = Ray::new(camera_center, ray_direction);
-                    let pixel = img.get_pixel_mut(x, img_y as u32);
-                    let pixel_color = ray_color(&r).output();
-                    *pixel = Rgb([
-                        pixel_color.x as u8,
-                        pixel_color.y as u8,
-                        pixel_color.z as u8,
-                    ]);
-                }
-            }
-            // send row range and rendered image to main thread
-            tx.send((row_begin..row_end, img))
-                .expect("failed to send result");
-        });
-    }
-
-    let mut result: RgbImage = ImageBuffer::new(image_width, image_height);
-
-    for (rows, data) in rx.iter().take(n_jobs) {
-        // idx is the corrsponding row in partial-rendered image
-        for (idx, row) in rows.enumerate() {
-            for col in 0..image_width {
-                let row = row as u32;
-                let idx = idx as u32;
-                *result.get_pixel_mut(col, row) = *data.get_pixel(col, idx);
-            }
+                    let r = camera.get_ray(u, v);
+                    ray_color(&r, &world, MAX_DEPTH)
+                })
+                .sum();
+            let pixel = img.get_pixel_mut(i as u32, (IMAGE_HEIGHT - j - 1) as u32);
+            let pixel_color = pixel_color.output(SAMPLES_PER_PIXEL);
+            *pixel = image::Rgb([
+                pixel_color.x as u8,
+                pixel_color.y as u8,
+                pixel_color.z as u8,
+            ]);
         }
         bar.inc(1);
     }
 
-    result.save("output/test.png").unwrap();
     bar.finish();
+    img.save("output/test.png").unwrap();
 }

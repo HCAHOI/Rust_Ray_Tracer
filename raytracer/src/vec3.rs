@@ -1,4 +1,7 @@
-use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::{
+    iter::Sum,
+    ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub struct Vec3 {
@@ -8,6 +11,16 @@ pub struct Vec3 {
 }
 use rand::Rng;
 pub type Point3 = Vec3;
+
+impl Vec3 {
+    pub fn random_range(range: std::ops::Range<f64>) -> Vec3 {
+        let mut rng = rand::thread_rng();
+        let x = rng.gen_range(range.clone());
+        let y = rng.gen_range(range.clone());
+        let z = rng.gen_range(range);
+        Vec3::new(x, y, z)
+    }
+}
 
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
@@ -70,17 +83,9 @@ impl Vec3 {
         Vec3::new(x, y, z)
     }
 
-    pub fn random_range(min: f64, max: f64) -> Vec3 {
-        let mut rng = rand::thread_rng();
-        let x = rng.gen_range(min..max);
-        let y = rng.gen_range(min..max);
-        let z = rng.gen_range(min..max);
-        Vec3::new(x, y, z)
-    }
-
     pub fn random_in_unit_sphere() -> Vec3 {
         loop {
-            let p = Vec3::random_range(-1.0, 1.0);
+            let p = Vec3::random_range(-1.0..1.0);
             if p.squared_length() < 1.0 {
                 return p;
             }
@@ -160,6 +165,10 @@ impl AddAssign<f64> for Vec3 {
             z: self.z + other,
         };
     }
+}
+
+pub fn dot(u: Vec3, v: Vec3) -> f64 {
+    u.dot(v)
 }
 
 impl Sub for Vec3 {
@@ -270,5 +279,11 @@ impl Neg for Vec3 {
             y: -self.y,
             z: -self.z,
         }
+    }
+}
+
+impl Sum for Vec3 {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Vec3::zero(), |acc, x| acc + x)
     }
 }

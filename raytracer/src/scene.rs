@@ -1,32 +1,136 @@
-#![allow(dead_code)]
-// You SHOULD remove above line in your code.
+use rand::Rng;
 
-use crate::Vec3;
-use crate::World;
-use raytracer_codegen::make_spheres_impl;
+use crate::{
+    color::Color,
+    hit::World,
+    mat::{Dielectric, Lambertian, Metal},
+    sphere::{MovingSphere, Sphere},
+    vec3::{Point3, Vec3},
+    world_add,
+};
 
-// Call the procedural macro, which will become `make_spheres` function.
-make_spheres_impl! {}
-
-// These three structs are just written here to make it compile.
-// You should `use` your own structs in this file.
-// e.g. replace next two lines with
-// `use crate::materials::{DiffuseLight, ConstantTexture}`
-pub struct ConstantTexture(Vec3);
-pub struct DiffuseLight(ConstantTexture);
-
-pub struct Sphere {
-    center: Vec3,
-    radius: f64,
-    material: DiffuseLight,
+pub fn scene_select(scene: u8) -> World {
+    match scene {
+        1 => random_scene(),
+        2 => random_scene_with_move(),
+        _ => random_scene(),
+    }
 }
 
-pub fn example_scene() -> World {
-    let mut spheres: Vec<Box<Sphere>> = make_spheres(); // Now `spheres` stores two spheres.
-    let mut hittable_list = vec![];
-    // You can now add spheres to your own world
-    hittable_list.append(&mut spheres);
+fn random_scene() -> World {
+    let mut rng = rand::thread_rng();
+    let mut world = World::new();
 
-    hittable_list.clear();
-    World { height: 512 }
+    let ground_mat = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    let ground_sphere = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_mat);
+
+    world_add!(world, ground_sphere);
+
+    for a in -11..=11 {
+        for b in -11..=11 {
+            let choose_mat: f64 = rng.gen::<f64>();
+            let center = Point3::new(
+                (a as f64) + rng.gen_range(0.0..0.9),
+                0.2,
+                (b as f64) + rng.gen_range(0.0..0.9),
+            );
+
+            if choose_mat < 0.8 {
+                // Diffuse
+                let albedo = Color::random_range(0.0..1.0) * Color::random_range(0.0..1.0);
+                let sphere_mat = Lambertian::new(albedo);
+                let sphere = Sphere::new(center, 0.2, sphere_mat);
+
+                world_add!(world, sphere);
+            } else if choose_mat < 0.95 {
+                // Metal
+                let albedo = Color::random_range(0.4..1.0);
+                let fuzz = rng.gen_range(0.0..0.5);
+                let sphere_mat = Metal::new(albedo, fuzz);
+                let sphere = Sphere::new(center, 0.2, sphere_mat);
+
+                world_add!(world, sphere);
+            } else {
+                // Glass
+                let sphere_mat = Dielectric::new(1.5);
+                let sphere = Sphere::new(center, 0.2, sphere_mat);
+
+                world_add!(world, sphere);
+            }
+        }
+    }
+
+    let mat1 = Dielectric::new(1.5);
+    let mat2 = Lambertian::new(Color::new(0.4, 0.2, 0.1));
+    let mat3 = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
+
+    let sphere1 = Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, mat1);
+    let sphere2 = Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, mat2);
+    let sphere3 = Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, mat3);
+
+    world_add!(world, sphere1);
+    world_add!(world, sphere2);
+    world_add!(world, sphere3);
+
+    world
+}
+
+fn random_scene_with_move() -> World {
+    let mut rng = rand::thread_rng();
+    let mut world = World::new();
+
+    let ground_mat = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    let ground_sphere = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_mat);
+
+    world_add!(world, ground_sphere);
+
+    for a in -11..=11 {
+        for b in -11..=11 {
+            let choose_mat: f64 = rng.gen();
+            let center = Point3::new(
+                (a as f64) + rng.gen_range(0.0..0.9),
+                0.2,
+                (b as f64) + rng.gen_range(0.0..0.9),
+            );
+
+            if choose_mat < 0.8 {
+                // Diffuse
+                let albedo = Color::random_range(0.0..1.0) * Color::random_range(0.0..1.0);
+                let sphere_mat = Lambertian::new(albedo);
+                let center1 =
+                    center + Vec3::new(rng.gen_range(-0.1..0.1), rng.gen_range(0.0..0.5), 0.0);
+                let sphere = MovingSphere::new(center, center1, 0.0, 1.0, 0.2, sphere_mat);
+
+                world_add!(world, sphere);
+            } else if choose_mat < 0.95 {
+                // Metal
+                let albedo = Color::random_range(0.4..1.0);
+                let fuzz = rng.gen_range(0.0..0.5);
+                let sphere_mat = Metal::new(albedo, fuzz);
+                let sphere = Sphere::new(center, 0.2, sphere_mat);
+
+                world_add!(world, sphere);
+            } else {
+                // Glass
+                let sphere_mat = Dielectric::new(1.5);
+                let sphere = Sphere::new(center, 0.2, sphere_mat);
+
+                world_add!(world, sphere);
+            }
+        }
+    }
+
+    let mat1 = Dielectric::new(1.5);
+    let mat2 = Lambertian::new(Color::new(0.4, 0.2, 0.1));
+    let mat3 = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
+
+    let sphere1 = Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, mat1);
+    let sphere2 = Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, mat2);
+    let sphere3 = Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, mat3);
+
+    world_add!(world, sphere1);
+    world_add!(world, sphere2);
+    world_add!(world, sphere3);
+
+    world
 }

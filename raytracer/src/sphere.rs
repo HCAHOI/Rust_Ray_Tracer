@@ -1,40 +1,129 @@
-use crate::material::Material;
+use super::hit::{Hit, HitRecord};
+use super::mat::Material;
+use super::ray::Ray;
+use super::vec3::{Point3, Vec3};
 
-use crate::utils::PI;
-use crate::Point3;
-use crate::Ray;
-use crate::Vec3;
-use std::sync::Arc;
-
-pub struct Sphere {
+pub struct Sphere<M: Material> {
     center: Point3,
     radius: f64,
-    mat_ptr: Arc<dyn Material>,
+    material: M,
 }
 
-impl Sphere {
-    pub fn new(cen: Point3, r: f64, m: Arc<dyn Material>) -> Sphere {
+impl<M: Material> Sphere<M> {
+    pub fn new(center: Point3, radius: f64, material: M) -> Self {
         Sphere {
-            center: cen,
-            radius: r,
-            mat_ptr: m,
+            center,
+            radius,
+            material,
+        }
+    }
+}
+
+impl<M: Material> Hit for Sphere<M> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let oc = r.origin() - self.center;
+        let a = r.direction().length().powi(2);
+        let half_b = oc.dot(r.direction());
+        let c = oc.length().powi(2) - self.radius.powi(2);
+        let discriminant = half_b.powi(2) - a * c;
+
+        if discriminant < 0.0 {
+            return None;
+        }
+
+        let sqrt_d = discriminant.sqrt();
+        let mut root = (-half_b - sqrt_d) / a;
+        if root < t_min || root > t_max {
+            root = (-half_b + sqrt_d) / a;
+            if root < t_min || root > t_max {
+                return None;
+            }
+        }
+
+        let p = r.at(root);
+        let mut rec = HitRecord {
+            position: p,
+            normal: Vec3::new(0.0, 0.0, 0.0),
+            t: root,
+            front_face: false,
+            material: &self.material,
+        };
+
+        let outward_normal = (rec.position - self.center) / self.radius;
+        rec.set_face_normal(r, outward_normal);
+
+        Some(rec)
+    }
+}
+
+pub struct MovingSphere<M: Material> {
+    center_st: Point3,
+    center_ed: Point3,
+    radius: f64,
+    material: M,
+    time_st: f64,
+    time_ed: f64,
+}
+
+impl<M: Material> MovingSphere<M> {
+    pub fn new(
+        center_st: Point3,
+        center_ed: Point3,
+        time_st: f64,
+        time_ed: f64,
+        radius: f64,
+        material: M,
+    ) -> Self {
+        MovingSphere {
+            center_st,
+            center_ed,
+            radius,
+            material,
+            time_st,
+            time_ed,
         }
     }
 
-    pub fn get_sphere_uv(p: Point3, u: &mut f64, v: &mut f64) {
-        let theta = (-p.y).acos();
-        let phi = (-p.z).atan2(p.x) + PI;
-
-        *u = phi / (2.0 * PI);
-        *v = theta / PI;
+    pub fn center(&self, time: f64) -> Point3 {
+        self.center_st
+            + (time - self.time_st) / (self.time_ed - self.time_st)
+                * (self.center_ed - self.center_st)
     }
 }
 
-pub fn hit_sphere(center: Point3, radius: f64, ray: &Ray) -> bool {
-    let oc = ray.origin() - center;
-    let a = ray.direction().dot(ray.direction());
-    let b = 2.0 * oc.dot(ray.direction());
-    let c = oc.dot(oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-    discriminant > 0.0
+impl<M: Material> Hit for MovingSphere<M> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let oc = r.origin() - self.center(r.time());
+        let a = r.direction().length().powi(2);
+        let half_b = oc.dot(r.direction());
+        let c = oc.length().powi(2) - self.radius.powi(2);
+        let discriminant = half_b.powi(2) - a * c;
+        if discriminant < 0.0 {
+            return None;
+        }
+
+        //find the nearest root that lies in the acceptable range
+        let sqrt_d = discriminant.sqrt();
+        let mut root = (-half_b - sqrt_d) / a;
+        if root < t_min || root > t_max {
+            root = (-half_b + sqrt_d) / a;
+            if root < t_min || root > t_max {
+                return None;
+            }
+        }
+
+        let p = r.at(root);
+        let mut rec = HitRecord {
+            position: p,
+            normal: Vec3::new(0.0, 0.0, 0.0),
+            t: root,
+            front_face: false,
+            material: &self.material,
+        };
+
+        let outward_normal = (rec.position - self.center(r.time())) / self.radius;
+        rec.set_face_normal(r, outward_normal);
+
+        Some(rec)
+    }
 }
