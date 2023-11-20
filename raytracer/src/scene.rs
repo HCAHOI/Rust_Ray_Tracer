@@ -6,7 +6,8 @@ use crate::{
     cfg::ASPECT_RATIO,
     color::Color,
     hit::Hit,
-    mat::{Dielectric, Lambertian, Metal},
+    mat::{Dielectric, DiffuseLight, Lambertian, Metal},
+    quad::{Plane, Quad},
     sphere::{MovingSphere, Sphere},
     texture::{CheckerTexture, ConstantTexture, ImageTexture, NoiseTexture},
     vec3::{Point3, Vec3},
@@ -18,21 +19,23 @@ use crate::{
 ///
 /// Choices:
 /// - 1: Random scene
-/// - 2: Two sphere
-/// - 3: Two perlin sphere
-/// - 4: Earth sphere
+/// - 2: Two perlin sphere
+/// - 3: Earth sphere
+/// - 4: Light room
+/// - 5: Cornell box
 /// - default: Random scene
-pub fn scene_select(scene: u8) -> (Box<dyn Hit>, Camera) {
+pub fn scene_select(scene: u8) -> (Box<dyn Hit>, Color, Camera) {
     match scene {
         1 => random_scene(),
-        2 => two_sphere(),
-        3 => two_perlin_sphere(),
-        4 => earth_sphere(),
+        2 => two_perlin_sphere(),
+        3 => earth_sphere(),
+        4 => light_room(),
+        5 => cornell_box(),
         _ => random_scene(),
     }
 }
 
-fn random_scene() -> (Box<dyn Hit>, Camera) {
+fn random_scene() -> (Box<dyn Hit>, Color, Camera) {
     let mut rng = rand::thread_rng();
     let mut world: Vec<Box<dyn Hit>> = vec![];
 
@@ -91,6 +94,8 @@ fn random_scene() -> (Box<dyn Hit>, Camera) {
     world_add!(world, sphere2);
     world_add!(world, sphere3);
 
+    let bgcolor = Color::new(0.7, 0.8, 1.0);
+
     // Camera
     let lookfrom = Point3::new(13.0, 2.0, 3.0);
     let lookat = Point3::new(0.0, 0.0, 0.0);
@@ -109,49 +114,10 @@ fn random_scene() -> (Box<dyn Hit>, Camera) {
         1.0,
     );
 
-    (Box::new(BVH::new(world, 0.0, 1.0)), camera)
+    (Box::new(BVH::new(world, 0.0, 1.0)), bgcolor, camera)
 }
 
-fn two_sphere() -> (Box<dyn Hit>, Camera) {
-    let mut world = World::default();
-
-    let top_mat = Lambertian::new(CheckerTexture::new(
-        ConstantTexture::new(Color::new(1.0, 1.0, 1.0)),
-        ConstantTexture::new(Color::new(0.3, 0.3, 1.0)),
-    ));
-    let bottom_mat = Lambertian::new(CheckerTexture::new(
-        ConstantTexture::new(Color::new(1.0, 1.0, 1.0)),
-        ConstantTexture::new(Color::new(0.3, 1.0, 0.3)),
-    ));
-
-    let top_sphere = Sphere::new(Point3::new(0.0, 10.0, 0.0), 10.0, top_mat);
-    let bottom_sphere = Sphere::new(Point3::new(0.0, -10.0, 0.0), 10.0, bottom_mat);
-
-    world.list.push(Box::new(top_sphere));
-    world.list.push(Box::new(bottom_sphere));
-
-    // Camera
-    let lookfrom = Point3::new(13.0, 2.0, 3.0);
-    let lookat = Point3::new(0.0, 0.0, 0.0);
-    let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = 10.0;
-    let aperture = 0.0;
-    let camera = Camera::new(
-        lookfrom,
-        lookat,
-        vup,
-        20.0,
-        ASPECT_RATIO,
-        aperture,
-        dist_to_focus,
-        0.0,
-        1.0,
-    );
-
-    (Box::new(world), camera)
-}
-
-fn two_perlin_sphere() -> (Box<dyn Hit>, Camera) {
+fn two_perlin_sphere() -> (Box<dyn Hit>, Color, Camera) {
     let mut world = World::default();
 
     let top_mat = Lambertian::new(NoiseTexture::new(2.0));
@@ -162,6 +128,8 @@ fn two_perlin_sphere() -> (Box<dyn Hit>, Camera) {
 
     world.list.push(Box::new(top_sphere));
     world.list.push(Box::new(bottom_sphere));
+
+    let bgcolor = Color::new(0.7, 0.8, 1.0);
 
     let lookfrom = Point3::new(1013.0, 2.0, 1003.0);
     let lookat = Point3::new(1000.0, 0.0, 1000.0);
@@ -180,10 +148,10 @@ fn two_perlin_sphere() -> (Box<dyn Hit>, Camera) {
         1.0,
     );
 
-    (Box::new(world), camera)
+    (Box::new(world), bgcolor, camera)
 }
 
-fn earth_sphere() -> (Box<dyn Hit>, Camera) {
+fn earth_sphere() -> (Box<dyn Hit>, Color, Camera) {
     let image = image::open(
         "/home/hoi/Desktop/courses/2023-2024-1/Computer Graphics/labs/Rust_Ray_Tracer/img/e.jpg",
     )
@@ -193,6 +161,8 @@ fn earth_sphere() -> (Box<dyn Hit>, Camera) {
     let img_data = image.into_raw();
     let texture = ImageTexture::new(img_data, width, height);
     let world = Sphere::new(Vec3::new(0.0, 0.0, 0.0), 2.0, Lambertian::new(texture));
+
+    let bgcolor = Color::new(0.7, 0.8, 1.0);
 
     let lookfrom = Point3::new(13.0, 2.0, 3.0);
     let lookat = Point3::new(0.0, 0.0, 0.0);
@@ -211,5 +181,103 @@ fn earth_sphere() -> (Box<dyn Hit>, Camera) {
         1.0,
     );
 
-    (Box::new(world), camera)
+    (Box::new(world), bgcolor, camera)
+}
+
+fn light_room() -> (Box<dyn Hit>, Color, Camera) {
+    let mut world = World::default();
+
+    let bottom_mat = Lambertian::new(ConstantTexture::new(Color::new(0.7, 0.7, 0.7)));
+    let top_mat = Lambertian::new(NoiseTexture::new(2.0));
+    let emitted = DiffuseLight::new(ConstantTexture::new(Color::new(4.0, 4.0, 4.0)));
+
+    let ground = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, bottom_mat);
+    let sphere = Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, top_mat);
+    let plane = Quad::new(Plane::XY, 3.0, 5.0, 1.0, 3.0, -2.0, emitted);
+
+    world.push(ground);
+    world.push(sphere);
+    world.push(plane);
+
+    let bgcolor = Color::new(0.0, 0.0, 0.0);
+
+    let lookfrom = Point3::new(26.0, 3.0, 6.0);
+    let lookat = Point3::new(0.0, 2.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.0;
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        20.0,
+        ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
+        0.0,
+        1.0,
+    );
+
+    (Box::new(world), bgcolor, camera)
+}
+
+fn cornell_box() -> (Box<dyn Hit>, Color, Camera) {
+    let mut world = World::default();
+
+    let red = Lambertian::new(ConstantTexture::new(Color::new(0.65, 0.05, 0.05)));
+    let white = Lambertian::new(ConstantTexture::new(Color::new(0.73, 0.73, 0.73)));
+    let green = Lambertian::new(ConstantTexture::new(Color::new(0.12, 0.45, 0.15)));
+    let light = DiffuseLight::new(ConstantTexture::new(Color::new(15.0, 15.0, 15.0)));
+
+    world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 555.0, green));
+    world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 0.0, red));
+    world.push(Quad::new(
+        Plane::XZ,
+        213.0,
+        343.0,
+        227.0,
+        332.0,
+        554.0,
+        light,
+    ));
+    world.push(Quad::new(
+        Plane::XZ,
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        0.0,
+        white.clone(),
+    ));
+    world.push(Quad::new(
+        Plane::XZ,
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    ));
+    world.push(Quad::new(Plane::XY, 0.0, 555.0, 0.0, 555.0, 555.0, white));
+
+    let bgcolor = Color::new(0.0, 0.0, 0.0);
+
+    let lookfrom = Point3::new(278.0, 278.0, -800.0);
+    let lookat = Point3::new(278.0, 278.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.05;
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        40.0,
+        ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
+        0.0,
+        1.0,
+    );
+
+    (Box::new(world), bgcolor, camera)
 }

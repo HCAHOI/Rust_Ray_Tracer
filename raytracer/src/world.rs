@@ -8,6 +8,12 @@ pub struct World {
     pub list: Vec<Box<dyn Hit>>,
 }
 
+impl World {
+    pub fn push(&mut self, object: impl Hit + 'static) {
+        self.list.push(Box::new(object));
+    }
+}
+
 impl Default for World {
     fn default() -> Self {
         World { list: vec![] }

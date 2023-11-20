@@ -1,4 +1,4 @@
-﻿use crate::{hit::Hit, ray::Ray, vec3::Vec3};
+use crate::{hit::Hit, ray::Ray, vec3::Vec3};
 
 pub type Color = Vec3;
 
@@ -22,20 +22,19 @@ impl Color {
     }
 }
 
-pub fn ray_color(ray: &Ray, world: &Box<dyn Hit>, depth: u64) -> Color {
+pub fn ray_color(ray: &Ray, world: &Box<dyn Hit>, color: Color, depth: u64) -> Color {
     if depth == 0 {
         return Color::new(0.0, 0.0, 0.0);
     }
 
     if let Some(rec) = world.hit(ray, 0.00001, f64::INFINITY) {
+        let emitted: Color = rec.material.emitted(rec.u, rec.v, &rec.position);
         if let Some((attenuation, scattered)) = rec.material.scatter(ray, &rec) {
-            attenuation * ray_color(&scattered, world, depth - 1)
+            attenuation * ray_color(&scattered, world, color, depth - 1) + emitted
         } else {
-            Color::new(0.0, 0.0, 0.0)
+            emitted
         }
     } else {
-        let unit_direction = ray.direction().unit();
-        let t = 0.5 * (unit_direction.y + 1.0);
-        (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
+        color
     }
 }

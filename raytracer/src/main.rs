@@ -6,6 +6,7 @@ mod color;
 mod hit;
 mod mat;
 mod perlin;
+mod quad;
 mod ray;
 mod scene;
 mod sphere;
@@ -24,7 +25,7 @@ use rayon::prelude::*;
 
 fn main() {
     // World
-    let (world, camera) = scene_select(SCENE_SELECTOR);
+    let (world, bgcolor, camera) = scene_select(SCENE_SELECTOR);
 
     // Image
     let mut img: RgbImage = ImageBuffer::new(IMAGE_WIDTH as u32, IMAGE_HEIGHT as u32);
@@ -43,7 +44,7 @@ fn main() {
                     let v = ((j as f64) + random_v) / ((IMAGE_HEIGHT - 1) as f64);
 
                     let r = camera.get_ray(u, v);
-                    ray_color(&r, &world, MAX_DEPTH)
+                    ray_color(&r, &world, bgcolor, MAX_DEPTH)
                 })
                 .sum();
             let pixel = img.get_pixel_mut(i as u32, (IMAGE_HEIGHT - j - 1) as u32);

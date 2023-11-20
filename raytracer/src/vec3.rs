@@ -56,6 +56,15 @@ impl Vec3 {
         }
     }
 
+    pub fn set(&mut self, idx: usize, val: f64) {
+        match idx {
+            0 => self.x = val,
+            1 => self.y = val,
+            2 => self.z = val,
+            _ => panic!("index out of range"),
+        }
+    }
+
     pub fn dot(&self, other: Vec3) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }

@@ -1,16 +1,19 @@
 use crate::color::Color;
-use crate::perlin::Perlin;
 use crate::texture::Texture;
 use rand::Rng;
 
 use crate::hit::HitRecord;
 use crate::ray::Ray;
-use crate::vec3::Vec3;
+use crate::vec3::{Point3, Vec3};
 
 pub trait Material: Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
+    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
+        Color::new(0.0, 0.0, 0.0)
+    }
 }
 
+#[derive(Copy, Clone)]
 pub struct Lambertian<T: Texture> {
     albedo: T,
 }
@@ -37,6 +40,7 @@ impl<T: Texture> Material for Lambertian<T> {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct Metal {
     albedo: Color,
     fuzz: f64,
@@ -65,6 +69,7 @@ impl Material for Metal {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct Dielectric {
     ir: f64,
 }
@@ -105,5 +110,26 @@ impl Material for Dielectric {
 
         let scattered = Ray::new(rec.position, direction, r_in.time());
         Some((Color::new(1.0, 1.0, 1.0), scattered))
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct DiffuseLight<T: Texture> {
+    emit: T,
+}
+
+impl<T: Texture> DiffuseLight<T> {
+    pub fn new(emit: T) -> DiffuseLight<T> {
+        DiffuseLight { emit }
+    }
+}
+
+impl<T: Texture> Material for DiffuseLight<T> {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord) -> Option<(Color, Ray)> {
+        None
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
+        self.emit.texture_map(u, v, p)
     }
 }
