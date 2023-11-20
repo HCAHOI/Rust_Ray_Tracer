@@ -35,21 +35,21 @@ impl Camera {
         let viewport_height = 2.0 * (theta / 2.0).tan();
         let viewport_width = viewport_height * aspect_ratio;
 
-        let cw = (lookfrom - lookat).unit();
-        let cu = Vec3::cross(vup, cw).unit();
-        let cv = Vec3::cross(cw, cu);
+        let camera_w = (lookfrom - lookat).unit();
+        let camera_u = Vec3::cross(vup, camera_w).unit();
+        let camera_v = Vec3::cross(camera_w, camera_u);
 
-        let h = focus_dist * viewport_width * cu;
-        let v = focus_dist * viewport_height * cv;
-        let llc = lookfrom - h / 2.0 - v / 2.0 - focus_dist * cw;
+        let h = focus_dist * viewport_width * camera_u;
+        let v = focus_dist * viewport_height * camera_v;
+        let llc = lookfrom - h / 2.0 - v / 2.0 - focus_dist * camera_w;
 
         Camera {
             origin: lookfrom,
             horizontal: h,
             vertical: v,
             lower_left_corner: llc,
-            cu,
-            cv,
+            cu: camera_u,
+            cv: camera_v,
             lens_radius: aperture / 2.0,
             time0,
             time1,
@@ -60,7 +60,6 @@ impl Camera {
         let rd = self.lens_radius * Vec3::random_in_unit_disk();
         let offset = self.cu * rd.x + self.cv * rd.y;
 
-        //track time between the time of strat and end
         let time = self.time0 + rand::thread_rng().gen::<f64>() * (self.time1 - self.time0);
 
         Ray::new(

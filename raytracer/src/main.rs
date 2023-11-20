@@ -1,3 +1,5 @@
+mod aabb;
+mod bvh;
 mod camera;
 mod cfg;
 mod color;
@@ -8,6 +10,7 @@ mod scene;
 mod sphere;
 mod utils;
 mod vec3;
+mod world;
 
 use camera::Camera;
 use cfg::*;

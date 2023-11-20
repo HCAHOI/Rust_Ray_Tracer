@@ -1,4 +1,6 @@
-﻿use super::mat::Material;
+use crate::aabb::{self, AABB};
+
+use super::mat::Material;
 use super::ray::Ray;
 use super::vec3::{Point3, Vec3};
 
@@ -12,6 +14,7 @@ pub struct HitRecord<'a> {
 
 pub trait Hit: Sync {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn bounding_box(&self, t0: f64, t1: f64) -> Option<AABB>;
 }
 
 impl HitRecord<'_> {
@@ -22,23 +25,5 @@ impl HitRecord<'_> {
         } else {
             (-1.0) * outward_normal
         }
-    }
-}
-
-pub type World = Vec<Box<dyn Hit>>;
-
-impl Hit for World {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let mut temp_rec = None;
-        let mut cloest_so_far = t_max;
-
-        for object in self {
-            if let Some(rec) = object.hit(r, t_min, cloest_so_far) {
-                cloest_so_far = rec.t;
-                temp_rec = Some(rec);
-            }
-        }
-
-        temp_rec
     }
 }

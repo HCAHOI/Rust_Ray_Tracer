@@ -1,3 +1,5 @@
+use crate::aabb::{self, AABB};
+
 use super::hit::{Hit, HitRecord};
 use super::mat::Material;
 use super::ray::Ray;
@@ -26,7 +28,6 @@ impl<M: Material> Hit for Sphere<M> {
         let half_b = oc.dot(r.direction());
         let c = oc.length().powi(2) - self.radius.powi(2);
         let discriminant = half_b.powi(2) - a * c;
-
         if discriminant < 0.0 {
             return None;
         }
@@ -53,6 +54,13 @@ impl<M: Material> Hit for Sphere<M> {
         rec.set_face_normal(r, outward_normal);
 
         Some(rec)
+    }
+
+    fn bounding_box(&self, _t0: f64, _t1: f64) -> Option<AABB> {
+        let min = self.center - Vec3::new(self.radius, self.radius, self.radius);
+        let max = self.center + Vec3::new(self.radius, self.radius, self.radius);
+
+        Some(AABB { min, max })
     }
 }
 
@@ -102,7 +110,6 @@ impl<M: Material> Hit for MovingSphere<M> {
             return None;
         }
 
-        //find the nearest root that lies in the acceptable range
         let sqrt_d = discriminant.sqrt();
         let mut root = (-half_b - sqrt_d) / a;
         if root < t_min || root > t_max {
@@ -125,5 +132,14 @@ impl<M: Material> Hit for MovingSphere<M> {
         rec.set_face_normal(r, outward_normal);
 
         Some(rec)
+    }
+
+    fn bounding_box(&self, _t0: f64, _t1: f64) -> Option<AABB> {
+        let radius_vec = Vec3::new(self.radius, self.radius, self.radius);
+
+        let box0 = AABB::new(self.center_st - radius_vec, self.center_st + radius_vec);
+        let box1 = AABB::new(self.center_ed - radius_vec, self.center_ed + radius_vec);
+
+        Some(aabb::surrounding_box(&box0, &box1))
     }
 }

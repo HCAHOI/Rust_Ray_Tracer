@@ -2,13 +2,19 @@ use rand::Rng;
 
 use crate::{
     color::Color,
-    hit::World,
     mat::{Dielectric, Lambertian, Metal},
     sphere::{MovingSphere, Sphere},
     vec3::{Point3, Vec3},
+    world::World,
     world_add,
 };
 
+/// Select a exmaple scene
+///
+/// Choices:
+/// - 1: Random scene
+/// - 2: Random scene with moving spheres
+/// - default: Random scene
 pub fn scene_select(scene: u8) -> World {
     match scene {
         1 => random_scene(),
@@ -19,7 +25,7 @@ pub fn scene_select(scene: u8) -> World {
 
 fn random_scene() -> World {
     let mut rng = rand::thread_rng();
-    let mut world = World::new();
+    let mut world = World::default();
 
     let ground_mat = Lambertian::new(Color::new(0.5, 0.5, 0.5));
     let ground_sphere = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_mat);
@@ -77,7 +83,7 @@ fn random_scene() -> World {
 
 fn random_scene_with_move() -> World {
     let mut rng = rand::thread_rng();
-    let mut world = World::new();
+    let mut world = World::default();
 
     let ground_mat = Lambertian::new(Color::new(0.5, 0.5, 0.5));
     let ground_sphere = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_mat);

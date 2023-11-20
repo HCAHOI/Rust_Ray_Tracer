@@ -1,8 +1,4 @@
-use crate::{
-    hit::{Hit, World},
-    ray::Ray,
-    vec3::Vec3,
-};
+use crate::{hit::Hit, ray::Ray, vec3::Vec3, world::World};
 
 pub type Color = Vec3;
 
