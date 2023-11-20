@@ -5,6 +5,7 @@ mod cfg;
 mod color;
 mod hit;
 mod mat;
+mod perlin;
 mod ray;
 mod scene;
 mod sphere;
@@ -23,8 +24,9 @@ use rayon::prelude::*;
 
 fn main() {
     // World
-    let (world, camera) = scene_select(2);
+    let (world, camera) = scene_select(SCENE_SELECTOR);
 
+    // Image
     let mut img: RgbImage = ImageBuffer::new(IMAGE_WIDTH as u32, IMAGE_HEIGHT as u32);
     let bar = ProgressBar::new(IMAGE_HEIGHT as u64);
 

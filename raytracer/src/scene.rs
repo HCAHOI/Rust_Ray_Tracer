@@ -1,4 +1,4 @@
-﻿use rand::Rng;
+use rand::Rng;
 
 use crate::{
     bvh::BVH,
@@ -6,7 +6,7 @@ use crate::{
     cfg::ASPECT_RATIO,
     color::Color,
     hit::Hit,
-    mat::{Dielectric, Lambertian, Metal},
+    mat::{Dielectric, Lambertian, Metal, NoiseTexture},
     sphere::{MovingSphere, Sphere},
     texture::{CheckerTexture, ConstantTexture},
     vec3::{Point3, Vec3},
@@ -19,11 +19,13 @@ use crate::{
 /// Choices:
 /// - 1: Random scene
 /// - 2: Two sphere
+/// - 3: Two perlin sphere
 /// - default: Random scene
 pub fn scene_select(scene: u8) -> (Box<dyn Hit>, Camera) {
     match scene {
         1 => random_scene(),
         2 => two_sphere(),
+        3 => two_perlin_sphere(),
         _ => random_scene(),
     }
 }
@@ -129,6 +131,38 @@ fn two_sphere() -> (Box<dyn Hit>, Camera) {
     // Camera
     let lookfrom = Point3::new(13.0, 2.0, 3.0);
     let lookat = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.0;
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        20.0,
+        ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
+        0.0,
+        1.0,
+    );
+
+    (Box::new(world), camera)
+}
+
+fn two_perlin_sphere() -> (Box<dyn Hit>, Camera) {
+    let mut world = World::default();
+
+    let top_mat = Lambertian::new(NoiseTexture::new(2.0));
+    let bottom_mat = Lambertian::new(NoiseTexture::new(2.0));
+
+    let top_sphere = Sphere::new(Point3::new(1000.0, 2.0, 1000.0), 2.0, top_mat);
+    let bottom_sphere = Sphere::new(Point3::new(1000.0, -1000.0, 1000.0), 1000.0, bottom_mat);
+
+    world.list.push(Box::new(top_sphere));
+    world.list.push(Box::new(bottom_sphere));
+
+    let lookfrom = Point3::new(1013.0, 2.0, 1003.0);
+    let lookat = Point3::new(1000.0, 0.0, 1000.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
     let aperture = 0.0;
