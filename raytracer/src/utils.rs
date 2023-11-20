@@ -3,6 +3,6 @@
 #[macro_export]
 macro_rules! world_add {
     ($world:expr, $object:expr) => {{
-        $world.list.push(Box::new($object));
+        $world.push(Box::new($object));
     }};
 }

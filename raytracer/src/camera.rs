@@ -2,8 +2,8 @@ use rand::Rng;
 
 use crate::utils::PI;
 
-use super::ray::Ray;
-use super::vec3::{Point3, Vec3};
+use crate::ray::Ray;
+use crate::vec3::{Point3, Vec3};
 use std::f64;
 
 pub struct Camera {
@@ -56,7 +56,7 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, s: f64, t: f64) -> Ray {
+    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
         let rd = self.lens_radius * Vec3::random_in_unit_disk();
         let offset = self.cu * rd.x + self.cv * rd.y;
 
@@ -64,7 +64,7 @@ impl Camera {
 
         Ray::new(
             self.origin + offset,
-            self.lower_left_corner + s * self.horizontal + t * self.vertical
+            self.lower_left_corner + u * self.horizontal + v * self.vertical
                 - (self.origin + offset),
             time,
         )

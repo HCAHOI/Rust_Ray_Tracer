@@ -8,42 +8,22 @@ mod mat;
 mod ray;
 mod scene;
 mod sphere;
+mod texture;
 mod utils;
 mod vec3;
 mod world;
 
-use camera::Camera;
+use crate::{color::ray_color, scene::scene_select};
 use cfg::*;
 use color::Color;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use rand::Rng;
 use rayon::prelude::*;
-use vec3::{Point3, Vec3};
-
-use crate::{color::ray_color, scene::scene_select};
 
 fn main() {
     // World
-    let world = scene_select(2);
-
-    // Camera
-    let lookfrom = Point3::new(13.0, 2.0, 3.0);
-    let lookat = Point3::new(0.0, 0.0, 0.0);
-    let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = 10.0;
-    let aperture = 0.1;
-    let camera = Camera::new(
-        lookfrom,
-        lookat,
-        vup,
-        20.0,
-        ASPECT_RATIO,
-        aperture,
-        dist_to_focus,
-        0.2,
-        0.6,
-    );
+    let (world, camera) = scene_select(2);
 
     let mut img: RgbImage = ImageBuffer::new(IMAGE_WIDTH as u32, IMAGE_HEIGHT as u32);
     let bar = ProgressBar::new(IMAGE_HEIGHT as u64);

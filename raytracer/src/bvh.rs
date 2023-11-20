@@ -1,7 +1,7 @@
-use super::aabb;
-use super::aabb::AABB;
-use super::hit::{Hit, HitRecord};
-use super::ray::Ray;
+use crate::aabb;
+use crate::aabb::AABB;
+use crate::hit::{Hit, HitRecord};
+use crate::ray::Ray;
 use std::cmp::Ordering;
 
 enum BVHNode {

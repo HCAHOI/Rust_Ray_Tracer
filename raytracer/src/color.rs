@@ -1,4 +1,4 @@
-use crate::{hit::Hit, ray::Ray, vec3::Vec3, world::World};
+﻿use crate::{hit::Hit, ray::Ray, vec3::Vec3};
 
 pub type Color = Vec3;
 
@@ -22,7 +22,7 @@ impl Color {
     }
 }
 
-pub fn ray_color(ray: &Ray, world: &World, depth: u64) -> Color {
+pub fn ray_color(ray: &Ray, world: &Box<dyn Hit>, depth: u64) -> Color {
     if depth == 0 {
         return Color::new(0.0, 0.0, 0.0);
     }

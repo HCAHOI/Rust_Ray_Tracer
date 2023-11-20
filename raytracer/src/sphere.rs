@@ -1,9 +1,9 @@
 use crate::aabb::{self, AABB};
-
-use super::hit::{Hit, HitRecord};
-use super::mat::Material;
-use super::ray::Ray;
-use super::vec3::{Point3, Vec3};
+use crate::hit::{Hit, HitRecord};
+use crate::mat::Material;
+use crate::ray::Ray;
+use crate::utils::PI;
+use crate::vec3::{Point3, Vec3};
 
 pub struct Sphere<M: Material> {
     center: Point3,
@@ -19,6 +19,11 @@ impl<M: Material> Sphere<M> {
             material,
         }
     }
+}
+
+// NOTE: may be incorrect
+pub fn get_sphere_uv(p: &Vec3) -> (f64, f64) {
+    ((p.z.atan2(p.x) + PI) / (2.0 * PI), p.y.acos() / PI)
 }
 
 impl<M: Material> Hit for Sphere<M> {
@@ -46,12 +51,18 @@ impl<M: Material> Hit for Sphere<M> {
             position: p,
             normal: Vec3::new(0.0, 0.0, 0.0),
             t: root,
+            u: 0.0,
+            v: 0.0,
             front_face: false,
             material: &self.material,
         };
 
         let outward_normal = (rec.position - self.center) / self.radius;
         rec.set_face_normal(r, outward_normal);
+
+        let (u, v) = get_sphere_uv(&outward_normal);
+        rec.u = u;
+        rec.v = v;
 
         Some(rec)
     }
@@ -124,12 +135,18 @@ impl<M: Material> Hit for MovingSphere<M> {
             position: p,
             normal: Vec3::new(0.0, 0.0, 0.0),
             t: root,
+            u: 0.0,
+            v: 0.0,
             front_face: false,
             material: &self.material,
         };
 
         let outward_normal = (rec.position - self.center(r.time())) / self.radius;
         rec.set_face_normal(r, outward_normal);
+
+        let (u, v) = get_sphere_uv(&outward_normal);
+        rec.u = u;
+        rec.v = v;
 
         Some(rec)
     }

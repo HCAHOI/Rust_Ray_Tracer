@@ -1,13 +1,14 @@
-use crate::aabb::{self, AABB};
-
-use super::mat::Material;
-use super::ray::Ray;
-use super::vec3::{Point3, Vec3};
+﻿use crate::aabb::AABB;
+use crate::mat::Material;
+use crate::ray::Ray;
+use crate::vec3::{Point3, Vec3};
 
 pub struct HitRecord<'a> {
     pub position: Point3,
     pub normal: Vec3,
     pub t: f64,
+    pub u: f64, // texture coordinates
+    pub v: f64, // texture coordinates
     pub front_face: bool,
     pub material: &'a dyn Material,
 }
