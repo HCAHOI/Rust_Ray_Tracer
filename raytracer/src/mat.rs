@@ -107,25 +107,3 @@ impl Material for Dielectric {
         Some((Color::new(1.0, 1.0, 1.0), scattered))
     }
 }
-
-pub struct NoiseTexture {
-    noise: Perlin,
-    scale: f64,
-}
-
-impl NoiseTexture {
-    pub fn new(scale: f64) -> NoiseTexture {
-        NoiseTexture {
-            noise: Perlin::new(),
-            scale,
-        }
-    }
-}
-
-impl Texture for NoiseTexture {
-    fn texture_map(&self, _u: f64, _v: f64, p: &Vec3) -> Color {
-        Color::new(1.0, 1.0, 1.0)
-            * 0.5
-            * (1.0 + f64::sin(self.scale * p.z + 10.0 * self.noise.turb(p, self.scale, 7)))
-    }
-}

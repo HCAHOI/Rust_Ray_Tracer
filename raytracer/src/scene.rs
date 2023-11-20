@@ -1,4 +1,4 @@
-use rand::Rng;
+﻿use rand::Rng;
 
 use crate::{
     bvh::BVH,
@@ -6,9 +6,9 @@ use crate::{
     cfg::ASPECT_RATIO,
     color::Color,
     hit::Hit,
-    mat::{Dielectric, Lambertian, Metal, NoiseTexture},
+    mat::{Dielectric, Lambertian, Metal},
     sphere::{MovingSphere, Sphere},
-    texture::{CheckerTexture, ConstantTexture},
+    texture::{CheckerTexture, ConstantTexture, ImageTexture, NoiseTexture},
     vec3::{Point3, Vec3},
     world::World,
     world_add,
@@ -20,12 +20,14 @@ use crate::{
 /// - 1: Random scene
 /// - 2: Two sphere
 /// - 3: Two perlin sphere
+/// - 4: Earth sphere
 /// - default: Random scene
 pub fn scene_select(scene: u8) -> (Box<dyn Hit>, Camera) {
     match scene {
         1 => random_scene(),
         2 => two_sphere(),
         3 => two_perlin_sphere(),
+        4 => earth_sphere(),
         _ => random_scene(),
     }
 }
@@ -166,6 +168,37 @@ fn two_perlin_sphere() -> (Box<dyn Hit>, Camera) {
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
     let aperture = 0.0;
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        20.0,
+        ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
+        0.0,
+        1.0,
+    );
+
+    (Box::new(world), camera)
+}
+
+fn earth_sphere() -> (Box<dyn Hit>, Camera) {
+    let image = image::open(
+        "/home/hoi/Desktop/courses/2023-2024-1/Computer Graphics/labs/Rust_Ray_Tracer/img/e.jpg",
+    )
+    .expect("image not found")
+    .to_rgb8();
+    let (width, height) = image.dimensions();
+    let img_data = image.into_raw();
+    let texture = ImageTexture::new(img_data, width, height);
+    let world = Sphere::new(Vec3::new(0.0, 0.0, 0.0), 2.0, Lambertian::new(texture));
+
+    let lookfrom = Point3::new(13.0, 2.0, 3.0);
+    let lookat = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
     let camera = Camera::new(
         lookfrom,
         lookat,
