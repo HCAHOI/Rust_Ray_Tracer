@@ -2,8 +2,8 @@ use rand::Rng;
 
 use crate::utils::PI;
 
-use crate::ray::Ray;
-use crate::vec3::{Point3, Vec3};
+use crate::geom::ray::Ray;
+use crate::geom::vec3::{Point3, Vec3};
 use std::f64;
 
 pub struct Camera {

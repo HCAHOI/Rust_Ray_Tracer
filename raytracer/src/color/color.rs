@@ -1,4 +1,4 @@
-use crate::{hit::Hit, ray::Ray, vec3::Vec3};
+use crate::{geom::ray::Ray, geom::vec3::Vec3, hit::hit::Hit};
 
 pub type Color = Vec3;
 

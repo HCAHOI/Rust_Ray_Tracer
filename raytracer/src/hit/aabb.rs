@@ -1,5 +1,5 @@
-use crate::ray::Ray;
-use crate::vec3::Vec3;
+use crate::geom::ray::Ray;
+use crate::geom::vec3::Vec3;
 use std::f64;
 
 #[derive(Copy, Clone, PartialEq, Debug)]

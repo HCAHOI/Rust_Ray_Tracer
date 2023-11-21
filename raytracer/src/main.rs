@@ -1,27 +1,17 @@
-mod aabb;
-mod bvh;
-mod camera;
 mod cfg;
 mod color;
+mod geom;
 mod hit;
-mod mat;
-mod perlin;
-mod quad;
-mod ray;
-mod scene;
-mod sphere;
-mod texture;
 mod utils;
-mod vec3;
 mod world;
 
-use crate::{color::ray_color, scene::scene_select};
 use cfg::*;
-use color::Color;
+use color::color::{ray_color, Color};
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use rand::Rng;
 use rayon::prelude::*;
+use world::scene::scene_select;
 
 fn main() {
     // World

@@ -1,7 +1,7 @@
-﻿use crate::aabb::AABB;
-use crate::mat::Material;
-use crate::ray::Ray;
-use crate::vec3::{Point3, Vec3};
+use crate::color::mat::Material;
+use crate::geom::ray::Ray;
+use crate::geom::vec3::{Point3, Vec3};
+use crate::hit::aabb::AABB;
 
 pub struct HitRecord<'a> {
     pub position: Point3,

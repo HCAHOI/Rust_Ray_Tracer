@@ -1,17 +1,17 @@
-﻿use rand::Rng;
+use rand::Rng;
 
 use crate::{
-    bvh::BVH,
-    camera::Camera,
     cfg::ASPECT_RATIO,
-    color::Color,
-    hit::Hit,
-    mat::{Dielectric, DiffuseLight, Lambertian, Metal},
-    quad::{Plane, Quad},
-    sphere::{MovingSphere, Sphere},
-    texture::{CheckerTexture, ConstantTexture, ImageTexture, NoiseTexture},
-    vec3::{Point3, Vec3},
-    world::World,
+    color::color::Color,
+    color::mat::{Dielectric, DiffuseLight, Lambertian, Metal},
+    color::texture::{CheckerTexture, ConstantTexture, ImageTexture, NoiseTexture},
+    geom::quad::{Plane, Quad},
+    geom::sphere::{MovingSphere, Sphere},
+    geom::vec3::{Point3, Vec3},
+    hit::bvh::BVH,
+    hit::hit::Hit,
+    world::camera::Camera,
+    world::world::World,
     world_add,
 };
 

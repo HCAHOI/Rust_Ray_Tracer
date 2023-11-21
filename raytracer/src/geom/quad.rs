@@ -1,7 +1,9 @@
-use crate::aabb::AABB;
-use crate::hit::{Hit, HitRecord};
-use crate::mat::Material;
-use crate::vec3::Vec3;
+use crate::color::mat::Material;
+use crate::hit::aabb::AABB;
+use crate::hit::hit::{Hit, HitRecord};
+
+use super::ray::Ray;
+use super::vec3::Vec3;
 
 pub enum Plane {
     XY,
@@ -34,7 +36,7 @@ impl<M: Material> Quad<M> {
 }
 
 impl<M: Material> Hit for Quad<M> {
-    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let (k_axis_index, a_axis_index, b_axis_index) = match &self.plane {
             Plane::YZ => (0, 1, 2),
             Plane::XZ => (1, 2, 0),

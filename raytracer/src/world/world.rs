@@ -1,7 +1,7 @@
 use crate::{
-    aabb::{surrounding_box, AABB},
-    hit::{Hit, HitRecord},
-    ray::Ray,
+    geom::ray::Ray,
+    hit::aabb::{surrounding_box, AABB},
+    hit::hit::{Hit, HitRecord},
 };
 
 pub struct World {

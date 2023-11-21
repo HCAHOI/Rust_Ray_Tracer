@@ -1,4 +1,4 @@
-use crate::vec3::{Point3, Vec3};
+use crate::geom::vec3::{Point3, Vec3};
 use rand::Rng;
 
 fn perlin_interp(c: &[[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {

@@ -1,10 +1,11 @@
-use crate::color::Color;
-use crate::texture::Texture;
 use rand::Rng;
 
-use crate::hit::HitRecord;
-use crate::ray::Ray;
-use crate::vec3::{Point3, Vec3};
+use crate::geom::ray::Ray;
+use crate::geom::vec3::{Point3, Vec3};
+use crate::hit::hit::HitRecord;
+
+use super::color::Color;
+use super::texture::Texture;
 
 pub trait Material: Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;

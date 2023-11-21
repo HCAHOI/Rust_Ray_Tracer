@@ -1,9 +1,10 @@
-﻿use crate::aabb::{self, AABB};
-use crate::hit::{Hit, HitRecord};
-use crate::mat::Material;
-use crate::ray::Ray;
+use crate::color::mat::Material;
+use crate::geom::vec3::{Point3, Vec3};
+use crate::hit::aabb::{self, AABB};
+use crate::hit::hit::{Hit, HitRecord};
 use crate::utils::PI;
-use crate::vec3::{Point3, Vec3};
+
+use super::ray::Ray;
 
 pub struct Sphere<M: Material> {
     center: Point3,

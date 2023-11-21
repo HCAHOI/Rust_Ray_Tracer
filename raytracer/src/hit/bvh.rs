@@ -1,7 +1,6 @@
-use crate::aabb;
-use crate::aabb::AABB;
-use crate::hit::{Hit, HitRecord};
-use crate::ray::Ray;
+use crate::geom::ray::Ray;
+use crate::hit::aabb::{surrounding_box, AABB};
+use crate::hit::hit::{Hit, HitRecord};
 use std::cmp::Ordering;
 
 enum BVHNode {
@@ -74,7 +73,7 @@ impl BVH {
                 let right = BVH::new(hit.drain(length / 2..).collect(), time0, time1);
                 // half the hit moved
                 let left = BVH::new(hit, time0, time1);
-                let bbox = aabb::surrounding_box(&left.bbox, &right.bbox);
+                let bbox = surrounding_box(&left.bbox, &right.bbox);
                 BVH {
                     tree: BVHNode::Branch {
                         left: Box::new(left),

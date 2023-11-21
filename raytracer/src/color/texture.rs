@@ -1,6 +1,6 @@
-use crate::color::Color;
-use crate::perlin::Perlin;
-use crate::vec3::Vec3;
+use crate::geom::vec3::Vec3;
+
+use super::{color::Color, perlin::Perlin};
 
 pub trait Texture: Sync {
     fn texture_map(&self, u: f64, v: f64, p: &Vec3) -> Color;
