@@ -1,9 +1,8 @@
-use crate::{geom::ray::Ray, geom::vec3::Vec3, hit::hit::Hit};
+﻿use crate::{geom::ray::Ray, geom::vec3::Vec3, hit::hit::Hittable};
 
 pub type Color = Vec3;
 
 impl Color {
-    // change range
     pub fn output(self, samples_per_pixel: u64) -> Self {
         let r = 256.0
             * (self.x / (samples_per_pixel as f64))
@@ -22,7 +21,7 @@ impl Color {
     }
 }
 
-pub fn ray_color(ray: &Ray, world: &Box<dyn Hit>, color: Color, depth: u64) -> Color {
+pub fn ray_color(ray: &Ray, world: &Box<dyn Hittable>, color: Color, depth: u64) -> Color {
     if depth == 0 {
         return Color::new(0.0, 0.0, 0.0);
     }

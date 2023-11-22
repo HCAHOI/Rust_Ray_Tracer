@@ -1,26 +1,26 @@
 use crate::{
     geom::ray::Ray,
     hit::aabb::{surrounding_box, AABB},
-    hit::hit::{Hit, HitRecord},
+    hit::hit::{HitRecord, Hittable},
 };
 
-pub struct World {
-    pub list: Vec<Box<dyn Hit>>,
+pub struct HittableList {
+    pub list: Vec<Box<dyn Hittable>>,
 }
 
-impl World {
-    pub fn push(&mut self, object: impl Hit + 'static) {
+impl HittableList {
+    pub fn push(&mut self, object: impl Hittable + 'static) {
         self.list.push(Box::new(object));
     }
 }
 
-impl Default for World {
+impl Default for HittableList {
     fn default() -> Self {
-        World { list: vec![] }
+        HittableList { list: vec![] }
     }
 }
 
-impl Hit for World {
+impl Hittable for HittableList {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut temp_rec = None;
         let mut cloest_so_far = t_max;

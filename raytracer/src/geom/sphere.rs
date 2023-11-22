@@ -1,7 +1,7 @@
-use crate::color::mat::Material;
+﻿use crate::render::mat::Material;
 use crate::geom::vec3::{Point3, Vec3};
 use crate::hit::aabb::{self, AABB};
-use crate::hit::hit::{Hit, HitRecord};
+use crate::hit::hit::{HitRecord, Hittable};
 use crate::utils::PI;
 
 use super::ray::Ray;
@@ -33,7 +33,7 @@ pub fn get_sphere_uv(p: &Vec3) -> (f64, f64) {
     ((p.z.atan2(p.x) + PI) / (2.0 * PI), p.y.acos() / PI)
 }
 
-impl<M: Material> Hit for Sphere<M> {
+impl<M: Material> Hittable for Sphere<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin() - self.center;
         let a = r.direction().length().powi(2);
@@ -117,7 +117,7 @@ impl<M: Material> MovingSphere<M> {
     }
 }
 
-impl<M: Material> Hit for MovingSphere<M> {
+impl<M: Material> Hittable for MovingSphere<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin() - self.center(r.time());
         let a = r.direction().length().powi(2);

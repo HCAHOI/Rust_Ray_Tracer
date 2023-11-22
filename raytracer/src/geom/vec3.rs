@@ -176,10 +176,6 @@ impl AddAssign<f64> for Vec3 {
     }
 }
 
-pub fn dot(u: Vec3, v: Vec3) -> f64 {
-    u.dot(v)
-}
-
 impl Sub for Vec3 {
     type Output = Self;
 

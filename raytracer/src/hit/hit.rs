@@ -1,4 +1,4 @@
-use crate::color::mat::Material;
+﻿use crate::render::mat::Material;
 use crate::geom::ray::Ray;
 use crate::geom::vec3::{Point3, Vec3};
 use crate::hit::aabb::AABB;
@@ -13,13 +13,13 @@ pub struct HitRecord<'a> {
     pub material: &'a dyn Material,
 }
 
-pub trait Hit: Sync {
+pub trait Hittable: Sync {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
     fn bounding_box(&self, t0: f64, t1: f64) -> Option<AABB>;
 }
 
 impl HitRecord<'_> {
-    pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) -> () {
+    pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
         self.front_face = r.direction().dot(outward_normal) < 0.0;
         self.normal = if self.front_face {
             outward_normal

@@ -18,7 +18,7 @@ impl ConstantTexture {
 }
 
 impl Texture for ConstantTexture {
-    fn texture_map(&self, u: f64, v: f64, p: &Vec3) -> Color {
+    fn texture_map(&self, _: f64, _: f64, _: &Vec3) -> Color {
         self.value
     }
 }

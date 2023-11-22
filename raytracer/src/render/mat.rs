@@ -9,7 +9,7 @@ use super::texture::Texture;
 
 pub trait Material: Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
-    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
+    fn emitted(&self, _: f64, _: f64, _: &Point3) -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
 }

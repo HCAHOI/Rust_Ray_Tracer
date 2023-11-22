@@ -1,7 +1,4 @@
 use rand::Rng;
-
-use crate::utils::PI;
-
 use crate::geom::ray::Ray;
 use crate::geom::vec3::{Point3, Vec3};
 use std::f64;
@@ -30,8 +27,7 @@ impl Camera {
         time0: f64,
         time1: f64,
     ) -> Camera {
-        // vertical field-of-view in degrees
-        let theta = PI / 180.0 * vfov;
+        let theta = vfov.to_radians();
         let viewport_height = 2.0 * (theta / 2.0).tan();
         let viewport_width = viewport_height * aspect_ratio;
 

@@ -1,12 +1,13 @@
 mod cfg;
-mod color;
+mod render;
 mod geom;
 mod hit;
+mod transform;
 mod utils;
 mod world;
 
 use cfg::*;
-use color::color::{ray_color, Color};
+use render::color::{ray_color, Color};
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use rand::Rng;

@@ -1,6 +1,6 @@
-use crate::color::mat::Material;
+use crate::render::mat::Material;
 use crate::hit::aabb::AABB;
-use crate::hit::hit::{Hit, HitRecord};
+use crate::hit::hit::{HitRecord, Hittable};
 
 use super::ray::Ray;
 use super::vec3::Vec3;
@@ -12,18 +12,18 @@ pub enum Plane {
 }
 
 pub struct Quad<M: Material> {
-    plane: Plane,
-    a0: f64,
-    a1: f64,
+    plane: Plane, // give the plane of the quad
+    a0: f64,      // start point of the quad on the first axis
+    a1: f64,      // end point of the quad on the first axis
     b0: f64,
     b1: f64,
-    k: f64,
+    k: f64, // position of the quad on the remaining axis(XY plane, k = z)
     material: M,
 }
 
 impl<M: Material> Quad<M> {
-    pub fn new(plane: Plane, a0: f64, a1: f64, b0: f64, b1: f64, k: f64, material: M) -> Quad<M> {
-        Quad {
+    pub fn new(plane: Plane, a0: f64, a1: f64, b0: f64, b1: f64, k: f64, material: M) -> Self {
+        Self {
             plane,
             a0,
             a1,
@@ -35,7 +35,7 @@ impl<M: Material> Quad<M> {
     }
 }
 
-impl<M: Material> Hit for Quad<M> {
+impl<M: Material> Hittable for Quad<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let (k_axis_index, a_axis_index, b_axis_index) = match &self.plane {
             Plane::YZ => (0, 1, 2),
