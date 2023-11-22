@@ -20,7 +20,7 @@ fn main() {
 
     // Image
     let mut img: RgbImage = ImageBuffer::new(IMAGE_WIDTH as u32, IMAGE_HEIGHT as u32);
-    let bar = ProgressBar::new(IMAGE_HEIGHT as u64);
+    let bar = ProgressBar::new(IMAGE_HEIGHT);
 
     for j in 0..IMAGE_HEIGHT {
         for i in 0..IMAGE_WIDTH {

@@ -2,7 +2,7 @@
     render::mat::Material,
     hit::{
         aabb::AABB,
-        hit::{HitRecord, Hittable},
+        hittable::{HitRecord, Hittable},
     },
     world::hittablelist::HittableList,
 };

@@ -1,7 +1,7 @@
-use crate::geom::ray::Ray;
+﻿use crate::geom::ray::Ray;
 use crate::geom::vec3::Vec3;
 use crate::hit::aabb::AABB;
-use crate::hit::hit::{HitRecord, Hittable};
+use crate::hit::hittable::{HitRecord, Hittable};
 
 pub struct Translate<H: Hittable> {
     hittable: H,

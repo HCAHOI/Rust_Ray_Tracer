@@ -1,6 +1,6 @@
 use crate::render::mat::Material;
 use crate::hit::aabb::AABB;
-use crate::hit::hit::{HitRecord, Hittable};
+use crate::hit::hittable::{HitRecord, Hittable};
 
 use super::ray::Ray;
 use super::vec3::Vec3;

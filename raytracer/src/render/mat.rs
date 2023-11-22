@@ -2,7 +2,7 @@ use rand::Rng;
 
 use crate::geom::ray::Ray;
 use crate::geom::vec3::{Point3, Vec3};
-use crate::hit::hit::HitRecord;
+use crate::hit::hittable::HitRecord;
 
 use super::color::Color;
 use super::texture::Texture;

@@ -32,7 +32,7 @@ impl Perlin {
     pub fn new() -> Perlin {
         fn permute(mut v: Vec<usize>, n: usize) -> Vec<usize> {
             let mut rng = rand::thread_rng();
-            for i in (0..n as usize).rev() {
+            for i in (0..n).rev() {
                 let target = rng.gen_range(0..=i);
                 v.swap(i, target);
             }

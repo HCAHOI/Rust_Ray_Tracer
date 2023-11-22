@@ -1,6 +1,6 @@
 use crate::geom::ray::Ray;
 use crate::hit::aabb::{surrounding_box, AABB};
-use crate::hit::hit::{HitRecord, Hittable};
+use crate::hit::hittable::{HitRecord, Hittable};
 use std::cmp::Ordering;
 
 enum BVHNode {
@@ -91,18 +91,18 @@ impl Hittable for BVH {
         if self.bbox.hit(r, t_min, t_max) {
             match &self.tree {
                 BVHNode::Branch { left, right } => {
-                    let left = left.hit(&r, t_min, t_max);
+                    let left = left.hit(r, t_min, t_max);
                     if let Some(l) = &left {
                         t_max = l.t
                     };
-                    let right = right.hit(&r, t_min, t_max);
+                    let right = right.hit(r, t_min, t_max);
                     if right.is_some() {
                         right
                     } else {
                         left
                     }
                 }
-                BVHNode::Leaf(leaf) => leaf.hit(&r, t_min, t_max),
+                BVHNode::Leaf(leaf) => leaf.hit(r, t_min, t_max),
             }
         } else {
             None

@@ -1,7 +1,7 @@
 ﻿use crate::render::mat::Material;
 use crate::geom::vec3::{Point3, Vec3};
 use crate::hit::aabb::{self, AABB};
-use crate::hit::hit::{HitRecord, Hittable};
+use crate::hit::hittable::{HitRecord, Hittable};
 use crate::utils::PI;
 
 use super::ray::Ray;

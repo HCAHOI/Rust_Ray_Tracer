@@ -1,9 +1,10 @@
 use crate::{
     geom::ray::Ray,
     hit::aabb::{surrounding_box, AABB},
-    hit::hit::{HitRecord, Hittable},
+    hit::hittable::{HitRecord, Hittable},
 };
 
+#[derive(Default)]
 pub struct HittableList {
     pub list: Vec<Box<dyn Hittable>>,
 }
@@ -14,11 +15,7 @@ impl HittableList {
     }
 }
 
-impl Default for HittableList {
-    fn default() -> Self {
-        HittableList { list: vec![] }
-    }
-}
+
 
 impl Hittable for HittableList {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {

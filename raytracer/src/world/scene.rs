@@ -12,7 +12,7 @@ use crate::{
         vec3::{Point3, Vec3},
     },
     hit::bvh::BVH,
-    hit::hit::Hittable,
+    hit::hittable::Hittable,
     transform::{
         rotate::{Axis, Rotate},
         translate::Translate,

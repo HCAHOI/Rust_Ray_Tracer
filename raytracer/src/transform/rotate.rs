@@ -3,7 +3,7 @@ use crate::{
     geom::{ray::Ray, vec3::Vec3},
     hit::{
         aabb::AABB,
-        hit::{HitRecord, Hittable},
+        hittable::{HitRecord, Hittable},
     },
 };
 
