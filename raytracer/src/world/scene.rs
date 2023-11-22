@@ -1,10 +1,7 @@
-﻿use rand::Rng;
+use rand::Rng;
 
 use crate::{
     cfg::ASPECT_RATIO,
-    render::color::Color,
-    render::mat::{Dielectric, DiffuseLight, Lambertian, Metal},
-    render::texture::{CheckerTexture, ConstantTexture, ImageTexture, NoiseTexture},
     geom::quad::{Plane, Quad},
     geom::sphere::{MovingSphere, Sphere},
     geom::{
@@ -13,6 +10,9 @@ use crate::{
     },
     hit::bvh::BVH,
     hit::hittable::Hittable,
+    render::color::Color,
+    render::mat::{Dielectric, DiffuseLight, Lambertian, Metal},
+    render::texture::{CheckerTexture, ConstantTexture, ImageTexture, NoiseTexture},
     transform::{
         rotate::{Axis, Rotate},
         translate::Translate,
@@ -249,33 +249,9 @@ fn cornell_box() -> (Box<dyn Hittable>, Color, Camera) {
         554.0,
         light,
     ));
-    world.push(Quad::new(
-        Plane::XZ,
-        0.0,
-        555.0,
-        0.0,
-        555.0,
-        0.0,
-        white,
-    ));
-    world.push(Quad::new(
-        Plane::XZ,
-        0.0,
-        555.0,
-        0.0,
-        555.0,
-        555.0,
-        white,
-    ));
-    world.push(Quad::new(
-        Plane::XY,
-        0.0,
-        555.0,
-        0.0,
-        555.0,
-        555.0,
-        white,
-    ));
+    world.push(Quad::new(Plane::XZ, 0.0, 555.0, 0.0, 555.0, 0.0, white));
+    world.push(Quad::new(Plane::XZ, 0.0, 555.0, 0.0, 555.0, 555.0, white));
+    world.push(Quad::new(Plane::XY, 0.0, 555.0, 0.0, 555.0, 555.0, white));
 
     world.push(Translate::new(
         Rotate::new(

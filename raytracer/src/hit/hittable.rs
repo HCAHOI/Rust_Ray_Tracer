@@ -1,7 +1,7 @@
-﻿use crate::render::mat::Material;
 use crate::geom::ray::Ray;
 use crate::geom::vec3::{Point3, Vec3};
 use crate::hit::aabb::AABB;
+use crate::render::mat::Material;
 
 pub struct HitRecord<'a> {
     pub position: Point3,

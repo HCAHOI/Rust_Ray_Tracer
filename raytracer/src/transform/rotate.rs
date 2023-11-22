@@ -1,4 +1,4 @@
-﻿#![allow(dead_code)]
+#![allow(dead_code)]
 use crate::{
     geom::{ray::Ray, vec3::Vec3},
     hit::{
@@ -104,13 +104,11 @@ impl<H: Hittable> Hittable for Rotate<H> {
 
         direction.set(
             a_axis,
-            self.cos_theta * r.direction().get(a_axis)
-                - self.sin_theta * r.direction().get(b_axis),
+            self.cos_theta * r.direction().get(a_axis) - self.sin_theta * r.direction().get(b_axis),
         );
         direction.set(
             b_axis,
-            self.sin_theta * r.direction().get(a_axis)
-                + self.cos_theta * r.direction().get(b_axis),
+            self.sin_theta * r.direction().get(a_axis) + self.cos_theta * r.direction().get(b_axis),
         );
 
         let rotated_ray = Ray::new(origin, direction, r.time());

@@ -1,6 +1,6 @@
-use rand::Rng;
 use crate::geom::ray::Ray;
 use crate::geom::vec3::{Point3, Vec3};
+use rand::Rng;
 use std::f64;
 
 pub struct Camera {

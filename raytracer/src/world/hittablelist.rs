@@ -15,8 +15,6 @@ impl HittableList {
     }
 }
 
-
-
 impl Hittable for HittableList {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut temp_rec = None;

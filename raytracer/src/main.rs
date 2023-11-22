@@ -1,17 +1,17 @@
 mod cfg;
-mod render;
 mod geom;
 mod hit;
+mod render;
 mod transform;
 mod utils;
 mod world;
 
 use cfg::*;
-use render::color::{ray_color, Color};
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use rand::Rng;
 use rayon::prelude::*;
+use render::color::{ray_color, Color};
 use world::scene::scene_select;
 
 fn main() {

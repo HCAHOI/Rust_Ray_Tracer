@@ -1,9 +1,9 @@
-﻿use crate::{
-    render::mat::Material,
+use crate::{
     hit::{
         aabb::AABB,
         hittable::{HitRecord, Hittable},
     },
+    render::mat::Material,
     world::hittablelist::HittableList,
 };
 
