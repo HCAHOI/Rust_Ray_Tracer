@@ -357,7 +357,7 @@ fn final_scene() -> (Box<dyn Hittable>, Color, Camera) {
     ));
 
     let image = image::open(
-        "/home/hoi/Desktop/courses/2023-2024-1/Computer Graphics/labs/Rust_Ray_Tracer/img/e.jpg",
+        "/home/hoi/Desktop/courses/2023-2024-1/Computer Graphics/labs/Rust_Ray_Tracer/img/SJTU-Badge.png",
     )
     .expect("image not found")
     .to_rgb8();
