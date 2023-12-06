@@ -1,5 +1,6 @@
 use rand::Rng;
 
+use crate::hit::hittable::FlipNormal;
 use crate::{
     cfg::ASPECT_RATIO,
     geom::quad::{Plane, Quad},
@@ -240,7 +241,10 @@ fn cornell_box() -> (Box<dyn Hittable>, Color, Camera) {
 
     world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 555.0, green));
     world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 0.0, red));
-    world.push(Quad::new(
+    world.push(Quad::new(Plane::XZ, 0.0, 555.0, 0.0, 555.0, 0.0, white));
+    world.push(Quad::new(Plane::XZ, 0.0, 555.0, 0.0, 555.0, 555.0, white));
+    world.push(Quad::new(Plane::XY, 0.0, 555.0, 0.0, 555.0, 555.0, white));
+    world.push(FlipNormal::new(Quad::new(
         Plane::XZ,
         213.0,
         343.0,
@@ -248,10 +252,7 @@ fn cornell_box() -> (Box<dyn Hittable>, Color, Camera) {
         332.0,
         554.0,
         light,
-    ));
-    world.push(Quad::new(Plane::XZ, 0.0, 555.0, 0.0, 555.0, 0.0, white));
-    world.push(Quad::new(Plane::XZ, 0.0, 555.0, 0.0, 555.0, 555.0, white));
-    world.push(Quad::new(Plane::XY, 0.0, 555.0, 0.0, 555.0, 555.0, white));
+    )));
 
     world.push(Translate::new(
         Rotate::new(

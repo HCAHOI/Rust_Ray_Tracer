@@ -3,14 +3,26 @@ use rand::Rng;
 use crate::geom::ray::Ray;
 use crate::geom::vec3::{Point3, Vec3};
 use crate::hit::hittable::HitRecord;
-
-use super::color::Color;
-use super::texture::Texture;
+use crate::render::color::Color;
+use crate::render::onb::ONB;
+use crate::render::texture::Texture;
+use crate::utils::PI;
 
 pub trait Material: Sync {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
-    fn emitted(&self, _: f64, _: f64, _: &Point3) -> Color {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
+        None
+    }
+
+    fn scatter_monte_carlo(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray, f64)> {
+        None
+    }
+
+    fn emitted(&self, rec: &HitRecord) -> Color {
         Color::new(0.0, 0.0, 0.0)
+    }
+
+    fn scatter_pdf(&self, r_in: &Ray, rec: &HitRecord, ray_out: &Ray) -> f64 {
+        0.0
     }
 }
 
@@ -38,6 +50,29 @@ impl<T: Texture> Material for Lambertian<T> {
             self.albedo.texture_map(rec.u, rec.v, &rec.position),
             scattered,
         ))
+    }
+
+    fn scatter_monte_carlo(&self, _r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray, f64)> {
+        let uvw = ONB::build_from_w(&rec.normal);
+        let mut scatter_direction = uvw.local(&Vec3::random_cos_direction());
+
+        if scatter_direction.near_zero() {
+            scatter_direction = rec.normal;
+        }
+
+        let ray_out = Ray::new(rec.position, scatter_direction, _r_in.time());
+
+        let pdf = uvw.w().dot(ray_out.direction()) / PI;
+
+        Some((
+            self.albedo.texture_map(rec.u, rec.v, &rec.position),
+            ray_out,
+            pdf,
+        ))
+    }
+
+    fn scatter_pdf(&self, r_in: &Ray, rec: &HitRecord, ray_out: &Ray) -> f64 {
+        rec.normal.dot(ray_out.direction().unit()).max(0.0) / PI
     }
 }
 
@@ -130,7 +165,11 @@ impl<T: Texture> Material for DiffuseLight<T> {
         None
     }
 
-    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
-        self.emit.texture_map(u, v, p)
+    fn emitted(&self, rec: &HitRecord) -> Color {
+        if rec.front_face {
+            self.emit.texture_map(rec.u, rec.v, &rec.position)
+        } else {
+            Color::new(0.0, 0.0, 0.0)
+        }
     }
 }

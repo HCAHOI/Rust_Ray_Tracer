@@ -9,7 +9,9 @@ pub struct Vec3 {
     pub y: f64,
     pub z: f64,
 }
+use crate::utils::PI;
 use rand::Rng;
+
 pub type Point3 = Vec3;
 
 impl Vec3 {
@@ -129,6 +131,19 @@ impl Vec3 {
                 return p;
             }
         }
+    }
+
+    pub fn random_cos_direction() -> Vec3 {
+        let mut rng = rand::thread_rng();
+
+        let (r1, r2) = (rng.gen::<f64>(), rng.gen::<f64>());
+        let phi = 2.0 * PI * r1;
+
+        let z = (1.0 - r2).sqrt();
+        let x = phi.cos() * r2.sqrt();
+        let y = phi.sin() * r2.sqrt();
+
+        Vec3::new(x, y, z)
     }
 }
 

@@ -28,3 +28,26 @@ impl HitRecord<'_> {
         }
     }
 }
+
+pub struct FlipNormal<H: Hittable> {
+    hittable: H,
+}
+
+impl<H: Hittable> FlipNormal<H> {
+    pub fn new(flipped: H) -> FlipNormal<H> {
+        FlipNormal { hittable: flipped }
+    }
+}
+
+impl<H: Hittable> Hittable for FlipNormal<H> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        self.hittable.hit(&r, t_min, t_max).map(|mut rec| {
+            rec.front_face = !rec.front_face;
+            rec
+        })
+    }
+
+    fn bounding_box(&self, t0: f64, t1: f64) -> Option<AABB> {
+        self.hittable.bounding_box(t0, t1)
+    }
+}
