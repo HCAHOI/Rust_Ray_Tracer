@@ -16,7 +16,7 @@ use world::scene::scene_select;
 
 fn main() {
     // World
-    let (world, bgcolor, camera) = scene_select(SCENE_SELECTOR);
+    let (world, lights, bgcolor, camera) = scene_select(SCENE_SELECTOR);
 
     // Image
     let mut img: RgbImage = ImageBuffer::new(IMAGE_WIDTH as u32, IMAGE_HEIGHT as u32);
@@ -35,7 +35,7 @@ fn main() {
                     let v = ((j as f64) + random_v) / ((IMAGE_HEIGHT - 1) as f64);
 
                     let r = camera.get_ray(u, v);
-                    ray_color(&r, &world, bgcolor, MAX_DEPTH)
+                    ray_color(&r, bgcolor, &world, &lights, MAX_DEPTH)
                 })
                 .sum();
             let pixel = img.get_pixel_mut(i as u32, (IMAGE_HEIGHT - j - 1) as u32);

@@ -1,10 +1,10 @@
+﻿use crate::geom::ray::Ray;
 use crate::geom::vec3::{Point3, Vec3};
 use crate::hit::aabb::{self, AABB};
 use crate::hit::hittable::{HitRecord, Hittable};
 use crate::render::mat::Material;
+use crate::render::onb::ONB;
 use crate::utils::PI;
-
-use super::ray::Ray;
 
 pub struct Sphere<M: Material> {
     center: Point3,
@@ -22,14 +22,7 @@ impl<M: Material> Sphere<M> {
     }
 }
 
-// NOTE: may be incorrect
 pub fn get_sphere_uv(p: &Vec3) -> (f64, f64) {
-    // p: a given point on the sphere of radius one, centered at the origin.
-    // u: returned value [0,1] of angle around the Y axis from X=-1.
-    // v: returned value [0,1] of angle from Y=-1 to Y=+1.
-    //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
-    //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
-    //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
     ((p.z.atan2(p.x) + PI) / (2.0 * PI), p.y.acos() / PI)
 }
 
@@ -74,11 +67,29 @@ impl<M: Material> Hittable for Sphere<M> {
         Some(rec)
     }
 
-    fn bounding_box(&self, _t0: f64, _t1: f64) -> Option<AABB> {
+    fn bounding_box(&self, _: f64, _: f64) -> Option<AABB> {
         let min = self.center - Vec3::new(self.radius, self.radius, self.radius);
         let max = self.center + Vec3::new(self.radius, self.radius, self.radius);
 
         Some(AABB { min, max })
+    }
+
+    fn pdf_value(&self, o: Point3, v: Vec3) -> f64 {
+        if let Some(_) = self.hit(&Ray::new(o, v, 0.0), 0.001, f64::MAX) {
+            let cos_theta_max =
+                (1.0 - self.radius.powi(2) / (self.center - o).length().powi(2)).sqrt();
+            let solid_angle = 2.0 * PI * (1.0 - cos_theta_max);
+            1.0 / solid_angle
+        } else {
+            0.0
+        }
+    }
+
+    fn random(&self, o: Vec3) -> Vec3 {
+        let direction = self.center - o;
+        let distance_squared = direction.length().powi(2);
+        let uvw = ONB::build_from_w(&direction);
+        uvw.local(&Vec3::random_to_sphere(self.radius, distance_squared))
     }
 }
 
@@ -158,7 +169,7 @@ impl<M: Material> Hittable for MovingSphere<M> {
         Some(rec)
     }
 
-    fn bounding_box(&self, _t0: f64, _t1: f64) -> Option<AABB> {
+    fn bounding_box(&self, _: f64, _: f64) -> Option<AABB> {
         let radius_vec = Vec3::new(self.radius, self.radius, self.radius);
 
         let box0 = AABB::new(self.center_st - radius_vec, self.center_st + radius_vec);

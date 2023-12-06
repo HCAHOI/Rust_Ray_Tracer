@@ -1,5 +1,7 @@
-﻿use crate::geom::vec3::Point3;
-use crate::{geom::ray::Ray, geom::vec3::Vec3, hit::hittable::Hittable};
+﻿use crate::{geom::ray::Ray, geom::vec3::Vec3, hit::hittable::Hittable};
+
+use super::mat::ScatterRecord;
+use super::pdf::PDF;
 
 pub type Color = Vec3;
 
@@ -22,44 +24,43 @@ impl Color {
     }
 }
 
-pub fn ray_color(ray: &Ray, world: &Box<dyn Hittable>, color: Color, depth: u64) -> Color {
+pub fn ray_color(
+    ray: &Ray,
+    background: Color,
+    world: &Box<dyn Hittable>,
+    lights: &Box<dyn Hittable>,
+    depth: u64,
+) -> Color {
     if depth == 0 {
         return Color::new(0.0, 0.0, 0.0);
     }
-
-    if let Some(rec) = world.hit(ray, 1e-5, f64::INFINITY) {
+    if let Some(rec) = world.hit(ray, 0.00001, f64::INFINITY) {
         let emitted: Color = rec.material.emitted(&rec);
-        let on_light = Point3::new(255.0, 554.0, 277.0); // Set according to the light in the Cornell Box scene
-        let mut to_light = on_light - rec.position;
-        let distance_squared = to_light.length().powi(2);
-
-        if to_light.length() > 0.0 {
-            to_light = to_light.unit();
-        }
-        if to_light.dot(rec.normal) < 0.0 {
-            return emitted;
-        }
-
-        let light_area = (343.0 - 213.0) * (332.0 - 227.0); // Set according to the light in the Cornell Box scene
-        let light_cos = to_light.y.abs();
-        if light_cos < 1e-6 {
-            return emitted;
-        }
-
-        if let Some((attenuation, mut ray_out, mut pdf)) =
-            rec.material.scatter_monte_carlo(ray, &rec)
-        {
-            pdf = distance_squared / (light_cos * light_area);
-            ray_out = Ray::new(rec.position, to_light, ray.time());
-            emitted
-                + attenuation
-                    * rec.material.scatter_pdf(ray, &rec, &ray_out)
-                    * ray_color(&ray_out, world, color, depth - 1)
-                    / pdf
+        if let Some(srec) = rec.material.scatter_monte_carlo(ray, &rec) {
+            match srec {
+                ScatterRecord::Specular {
+                    specular_ray,
+                    attenuation,
+                } => {
+                    return attenuation
+                        * ray_color(&specular_ray, background, world, lights, depth - 1)
+                }
+                ScatterRecord::Scatter { pdf, attenuation } => {
+                    let hittable_pdf = PDF::hittable_pdf(rec.position, lights);
+                    let mixture_pdf = PDF::mixture_pdf(&hittable_pdf, &pdf);
+                    let scattered = Ray::new(rec.position, mixture_pdf.generate(), ray.time());
+                    let pdf_value = mixture_pdf.value(scattered.direction());
+                    return emitted
+                        + attenuation
+                            * rec.material.scatter_pdf(ray, &rec, &scattered)
+                            * ray_color(&scattered, background, world, lights, depth - 1)
+                            / pdf_value;
+                }
+            }
         } else {
             emitted
         }
     } else {
-        color
+        background
     }
 }

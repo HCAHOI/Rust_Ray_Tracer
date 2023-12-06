@@ -1,19 +1,31 @@
 use rand::Rng;
 
 use crate::geom::ray::Ray;
-use crate::geom::vec3::{Point3, Vec3};
+use crate::geom::vec3::Vec3;
 use crate::hit::hittable::HitRecord;
 use crate::render::color::Color;
 use crate::render::onb::ONB;
+use crate::render::pdf::PDF;
 use crate::render::texture::Texture;
 use crate::utils::PI;
+
+pub enum ScatterRecord<'a> {
+    Specular {
+        specular_ray: Ray,
+        attenuation: Color,
+    },
+    Scatter {
+        pdf: PDF<'a>,
+        attenuation: Color,
+    },
+}
 
 pub trait Material: Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
         None
     }
 
-    fn scatter_monte_carlo(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray, f64)> {
+    fn scatter_monte_carlo(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         None
     }
 
@@ -52,23 +64,12 @@ impl<T: Texture> Material for Lambertian<T> {
         ))
     }
 
-    fn scatter_monte_carlo(&self, _r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray, f64)> {
-        let uvw = ONB::build_from_w(&rec.normal);
-        let mut scatter_direction = uvw.local(&Vec3::random_cos_direction());
-
-        if scatter_direction.near_zero() {
-            scatter_direction = rec.normal;
-        }
-
-        let ray_out = Ray::new(rec.position, scatter_direction, _r_in.time());
-
-        let pdf = uvw.w().dot(ray_out.direction()) / PI;
-
-        Some((
-            self.albedo.texture_map(rec.u, rec.v, &rec.position),
-            ray_out,
-            pdf,
-        ))
+    fn scatter_monte_carlo(&self, _r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        let rec = ScatterRecord::Scatter {
+            pdf: PDF::cosine_pdf(rec.normal),
+            attenuation: self.albedo.texture_map(rec.u, rec.v, &rec.position),
+        };
+        Some(rec)
     }
 
     fn scatter_pdf(&self, r_in: &Ray, rec: &HitRecord, ray_out: &Ray) -> f64 {
@@ -99,6 +100,25 @@ impl Material for Metal {
 
         if scattered.direction().dot(rec.normal) > 0.0 {
             Some((self.albedo, scattered))
+        } else {
+            None
+        }
+    }
+
+    fn scatter_monte_carlo(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        let reflected = Vec3::reflect(r_in.direction(), rec.normal).unit();
+        let scattered = Ray::new(
+            rec.position,
+            reflected + self.fuzz * Vec3::random_in_unit_sphere(),
+            r_in.time(),
+        );
+
+        if scattered.direction().dot(rec.normal) > 0.0 {
+            let rec = ScatterRecord::Specular {
+                specular_ray: scattered,
+                attenuation: self.albedo,
+            };
+            Some(rec)
         } else {
             None
         }
@@ -146,6 +166,39 @@ impl Material for Dielectric {
 
         let scattered = Ray::new(rec.position, direction, r_in.time());
         Some((Color::new(1.0, 1.0, 1.0), scattered))
+    }
+
+    fn scatter_monte_carlo(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        let attenuation = Color::new(1.0, 1.0, 1.0);
+        let refraction_ratio = if rec.front_face {
+            1.0 / self.ir
+        } else {
+            self.ir
+        };
+
+        let unit_direction = r_in.direction().unit();
+
+        let cos_theta = ((-1.0) * unit_direction).dot(rec.normal).min(1.0);
+        let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
+
+        let mut rng = rand::thread_rng();
+        let cannot_refract = refraction_ratio * sin_theta > 1.0;
+        let will_reflect = rng.gen::<f64>() < Self::reflectance(cos_theta, refraction_ratio);
+
+        let direction = if cannot_refract || will_reflect {
+            Vec3::reflect(unit_direction, rec.normal)
+        } else {
+            Vec3::refract(unit_direction, rec.normal, refraction_ratio)
+        };
+
+        let scattered = Ray::new(rec.position, direction, r_in.time());
+
+        let rec = ScatterRecord::Specular {
+            specular_ray: scattered,
+            attenuation,
+        };
+
+        Some(rec)
     }
 }
 

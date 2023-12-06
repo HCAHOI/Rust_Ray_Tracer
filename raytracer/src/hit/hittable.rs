@@ -16,6 +16,12 @@ pub struct HitRecord<'a> {
 pub trait Hittable: Sync {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
     fn bounding_box(&self, t0: f64, t1: f64) -> Option<AABB>;
+    fn pdf_value(&self, o: Point3, v: Vec3) -> f64 {
+        0.0
+    }
+    fn random(&self, o: Vec3) -> Vec3 {
+        Vec3::new(1.0, 0.0, 0.0)
+    }
 }
 
 impl HitRecord<'_> {
@@ -29,6 +35,7 @@ impl HitRecord<'_> {
     }
 }
 
+#[derive(Clone)]
 pub struct FlipNormal<H: Hittable> {
     hittable: H,
 }
@@ -49,5 +56,13 @@ impl<H: Hittable> Hittable for FlipNormal<H> {
 
     fn bounding_box(&self, t0: f64, t1: f64) -> Option<AABB> {
         self.hittable.bounding_box(t0, t1)
+    }
+
+    fn pdf_value(&self, o: Vec3, v: Vec3) -> f64 {
+        self.hittable.pdf_value(o, v)
+    }
+
+    fn random(&self, o: Vec3) -> Vec3 {
+        self.hittable.random(o)
     }
 }

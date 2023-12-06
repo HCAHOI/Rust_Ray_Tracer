@@ -1,5 +1,7 @@
-use rand::Rng;
+﻿use rand::Rng;
 
+use crate::geom::mesh::Mesh;
+use crate::geom::triangle::Triangle;
 use crate::hit::hittable::FlipNormal;
 use crate::{
     cfg::ASPECT_RATIO,
@@ -27,25 +29,23 @@ use crate::{
 ///
 /// Choices:
 /// - 1: Random scene
-/// - 2: Two perlin sphere
-/// - 3: Earth sphere
-/// - 4: Light room
-/// - 5: Cornell box
-/// - 6: Final scene
+/// - 2: Earth sphere
+/// - 3: Cornell box
+/// - 4: Final scene
+/// - 5: Cornell test
 /// - default: Random scene
-pub fn scene_select(scene: u8) -> (Box<dyn Hittable>, Color, Camera) {
+pub fn scene_select(scene: u8) -> (Box<dyn Hittable>, Box<dyn Hittable>, Color, Camera) {
     match scene {
         1 => random_scene(),
-        2 => two_perlin_sphere(),
-        3 => earth_sphere(),
-        4 => light_room(),
-        5 => cornell_box(),
-        6 => final_scene(),
+        2 => earth_sphere(),
+        3 => cornell_box(),
+        4 => weekend_final_scene(),
+        5 => cornell_test(),
         _ => random_scene(),
     }
 }
 
-fn random_scene() -> (Box<dyn Hittable>, Color, Camera) {
+fn random_scene() -> (Box<dyn Hittable>, Box<dyn Hittable>, Color, Camera) {
     let mut rng = rand::thread_rng();
     let mut world: Vec<Box<dyn Hittable>> = vec![];
 
@@ -104,6 +104,8 @@ fn random_scene() -> (Box<dyn Hittable>, Color, Camera) {
     world_add!(world, sphere2);
     world_add!(world, sphere3);
 
+    let lights = HittableList::default();
+
     let bgcolor = Color::new(0.7, 0.8, 1.0);
 
     // Camera
@@ -124,44 +126,15 @@ fn random_scene() -> (Box<dyn Hittable>, Color, Camera) {
         1.0,
     );
 
-    (Box::new(BVH::new(world, 0.0, 1.0)), bgcolor, camera)
+    (
+        Box::new(BVH::new(world, 0.0, 1.0)),
+        Box::new(lights),
+        bgcolor,
+        camera,
+    )
 }
 
-fn two_perlin_sphere() -> (Box<dyn Hittable>, Color, Camera) {
-    let mut world = HittableList::default();
-
-    let top_mat = Lambertian::new(NoiseTexture::new(2.0));
-    let bottom_mat = Lambertian::new(NoiseTexture::new(2.0));
-
-    let top_sphere = Sphere::new(Point3::new(1000.0, 2.0, 1000.0), 2.0, top_mat);
-    let bottom_sphere = Sphere::new(Point3::new(1000.0, -1000.0, 1000.0), 1000.0, bottom_mat);
-
-    world.list.push(Box::new(top_sphere));
-    world.list.push(Box::new(bottom_sphere));
-
-    let bgcolor = Color::new(0.7, 0.8, 1.0);
-
-    let lookfrom = Point3::new(1013.0, 2.0, 1003.0);
-    let lookat = Point3::new(1000.0, 0.0, 1000.0);
-    let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = 10.0;
-    let aperture = 0.0;
-    let camera = Camera::new(
-        lookfrom,
-        lookat,
-        vup,
-        20.0,
-        ASPECT_RATIO,
-        aperture,
-        dist_to_focus,
-        0.0,
-        1.0,
-    );
-
-    (Box::new(world), bgcolor, camera)
-}
-
-fn earth_sphere() -> (Box<dyn Hittable>, Color, Camera) {
+fn earth_sphere() -> (Box<dyn Hittable>, Box<dyn Hittable>, Color, Camera) {
     let image = image::open(
         "/home/hoi/Desktop/courses/2023-2024-1/Computer Graphics/labs/Rust_Ray_Tracer/img/e.jpg",
     )
@@ -171,6 +144,8 @@ fn earth_sphere() -> (Box<dyn Hittable>, Color, Camera) {
     let img_data = image.into_raw();
     let texture = ImageTexture::new(img_data, width, height);
     let world = Sphere::new(Vec3::new(0.0, 0.0, 0.0), 2.0, Lambertian::new(texture));
+
+    let lights = HittableList::default();
 
     let bgcolor = Color::new(0.7, 0.8, 1.0);
 
@@ -191,60 +166,19 @@ fn earth_sphere() -> (Box<dyn Hittable>, Color, Camera) {
         1.0,
     );
 
-    (Box::new(world), bgcolor, camera)
+    (Box::new(world), Box::new(lights), bgcolor, camera)
 }
 
-fn light_room() -> (Box<dyn Hittable>, Color, Camera) {
-    let mut world = HittableList::default();
-
-    let bottom_mat = Lambertian::new(ConstantTexture::new(Color::new(0.7, 0.7, 0.7)));
-    let top_mat = Lambertian::new(NoiseTexture::new(2.0));
-    let emitted = DiffuseLight::new(ConstantTexture::new(Color::new(4.0, 4.0, 4.0)));
-
-    let ground = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, bottom_mat);
-    let sphere = Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, top_mat);
-    let plane = Quad::new(Plane::XY, 3.0, 5.0, 1.0, 3.0, -2.0, emitted);
-
-    world.push(ground);
-    world.push(sphere);
-    world.push(plane);
-
-    let bgcolor = Color::new(0.0, 0.0, 0.0);
-
-    let lookfrom = Point3::new(26.0, 3.0, 6.0);
-    let lookat = Point3::new(0.0, 2.0, 0.0);
-    let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = 10.0;
-    let aperture = 0.0;
-    let camera = Camera::new(
-        lookfrom,
-        lookat,
-        vup,
-        20.0,
-        ASPECT_RATIO,
-        aperture,
-        dist_to_focus,
-        0.0,
-        1.0,
-    );
-
-    (Box::new(world), bgcolor, camera)
-}
-
-fn cornell_box() -> (Box<dyn Hittable>, Color, Camera) {
+fn cornell_box() -> (Box<dyn Hittable>, Box<dyn Hittable>, Color, Camera) {
     let mut world = HittableList::default();
 
     let red = Lambertian::new(ConstantTexture::new(Color::new(0.65, 0.05, 0.05)));
     let white = Lambertian::new(ConstantTexture::new(Color::new(0.73, 0.73, 0.73)));
-    let green = Lambertian::new(ConstantTexture::new(Color::new(0.12, 0.45, 0.15)));
-    let light = DiffuseLight::new(ConstantTexture::new(Color::new(25.0, 25.0, 25.0)));
-
-    world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 555.0, green));
-    world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 0.0, red));
-    world.push(Quad::new(Plane::XZ, 0.0, 555.0, 0.0, 555.0, 0.0, white));
-    world.push(Quad::new(Plane::XZ, 0.0, 555.0, 0.0, 555.0, 555.0, white));
-    world.push(Quad::new(Plane::XY, 0.0, 555.0, 0.0, 555.0, 555.0, white));
-    world.push(FlipNormal::new(Quad::new(
+    let green: Lambertian<ConstantTexture> =
+        Lambertian::new(ConstantTexture::new(Color::new(0.12, 0.45, 0.15)));
+    let dielectric = Dielectric::new(1.5);
+    let light = DiffuseLight::new(ConstantTexture::new(Color::new(15.0, 15.0, 15.0)));
+    let rect_light = FlipNormal::new(Quad::new(
         Plane::XZ,
         213.0,
         343.0,
@@ -252,20 +186,21 @@ fn cornell_box() -> (Box<dyn Hittable>, Color, Camera) {
         332.0,
         554.0,
         light,
-    )));
-
-    world.push(Translate::new(
-        Rotate::new(
-            Axis::Y,
-            Cube::new(
-                Vec3::new(0.0, 0.0, 0.0),
-                Vec3::new(165.0, 165.0, 165.0),
-                white,
-            ),
-            -18.0,
-        ),
-        Vec3::new(130.0, 0.0, 65.0),
     ));
+
+    world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 555.0, green));
+    world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 0.0, red));
+    world.push(Quad::new(Plane::XZ, 0.0, 555.0, 0.0, 555.0, 0.0, white));
+    world.push(Quad::new(Plane::XZ, 0.0, 555.0, 0.0, 555.0, 555.0, white));
+    world.push(Quad::new(Plane::XY, 0.0, 555.0, 0.0, 555.0, 555.0, white));
+    world.push(rect_light.clone());
+
+    world.push(Sphere::new(
+        Point3::new(190.0, 90.0, 190.0),
+        90.0,
+        dielectric,
+    ));
+
     world.push(Translate::new(
         Rotate::new(
             Axis::Y,
@@ -278,6 +213,9 @@ fn cornell_box() -> (Box<dyn Hittable>, Color, Camera) {
         ),
         Vec3::new(265.0, 0.0, 295.0),
     ));
+
+    let mut lights = HittableList::default();
+    lights.push(rect_light);
 
     let bgcolor = Color::new(0.0, 0.0, 0.0);
 
@@ -298,10 +236,10 @@ fn cornell_box() -> (Box<dyn Hittable>, Color, Camera) {
         1.0,
     );
 
-    (Box::new(world), bgcolor, camera)
+    (Box::new(world), Box::new(lights), bgcolor, camera)
 }
 
-fn final_scene() -> (Box<dyn Hittable>, Color, Camera) {
+fn weekend_final_scene() -> (Box<dyn Hittable>, Box<dyn Hittable>, Color, Camera) {
     let mut world = HittableList::default();
 
     let mut rng = rand::thread_rng();
@@ -327,7 +265,7 @@ fn final_scene() -> (Box<dyn Hittable>, Color, Camera) {
     world.push(BVH::new(box_list1, 0.0, 1.0));
 
     let light = DiffuseLight::new(ConstantTexture::new(Color::new(7.0, 7.0, 7.0)));
-    world.push(Quad::new(
+    let rect_light = FlipNormal::new(Quad::new(
         Plane::XZ,
         147.0,
         412.0,
@@ -336,6 +274,7 @@ fn final_scene() -> (Box<dyn Hittable>, Color, Camera) {
         554.0,
         light,
     ));
+    world.push(rect_light.clone());
 
     let center = Point3::new(400.0, 400.0, 200.0);
     world.push(MovingSphere::new(
@@ -363,6 +302,7 @@ fn final_scene() -> (Box<dyn Hittable>, Color, Camera) {
     .expect("image not found")
     .to_rgb8();
     let (nx, ny) = image.dimensions();
+    println!("nx: {}, ny: {}", nx, ny);
     let data = image.into_raw();
     let texture = ImageTexture::new(data, nx, ny);
     world.push(Sphere::new(
@@ -397,6 +337,9 @@ fn final_scene() -> (Box<dyn Hittable>, Color, Camera) {
 
     let bgcolor = Color::zero();
 
+    let mut lights = HittableList::default();
+    lights.push(rect_light);
+
     let lookfrom = Point3::new(478.0, 278.0, -600.0);
     let lookat = Point3::new(278.0, 278.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
@@ -414,5 +357,114 @@ fn final_scene() -> (Box<dyn Hittable>, Color, Camera) {
         1.0,
     );
 
-    (Box::new(world), bgcolor, camera)
+    (Box::new(world), Box::new(lights), bgcolor, camera)
+}
+
+fn cornell_test() -> (Box<dyn Hittable>, Box<dyn Hittable>, Color, Camera) {
+    let mut world = HittableList::default();
+
+    let white = Lambertian::new(ConstantTexture::new(Color::new(0.73, 0.73, 0.73)));
+    let tomato = Lambertian::new(ConstantTexture::new(Color::new(1.0, 0.39, 0.28)));
+    let violet = Lambertian::new(ConstantTexture::new(Color::new(0.93, 0.51, 0.93)));
+    let dielectric = Dielectric::new(1.5);
+    let metal = Metal::new(Color::new(0.8, 0.85, 0.88), 0.02);
+    let light = DiffuseLight::new(ConstantTexture::new(Color::new(1.0, 1.0, 0.88) * 2.0));
+    let image = image::open(
+        "/home/hoi/Desktop/courses/2023-2024-1/Computer Graphics/labs/Rust_Ray_Tracer/objects/SJTU_East_Gate/albedo.png",
+    )
+    .expect("image not found")
+    .to_rgb8();
+    let (nx, ny) = image.dimensions();
+    println!("nx: {}, ny: {}", nx, ny);
+    let data = image.into_raw();
+    let gate_image_text = ImageTexture::new(data, nx, ny);
+
+    let obj = Mesh::load_obj("/home/hoi/Desktop/courses/2023-2024-1/Computer Graphics/labs/Rust_Ray_Tracer/objects/SJTU_East_Gate/mesh.obj", Vec3::new(208.0, 55.0, 208.0), 0.1, Lambertian::new(gate_image_text)).unwrap();
+
+    world.push(obj);
+    world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 555.0, violet));
+    world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 0.0, tomato));
+    world.push(Quad::new(
+        Plane::XZ,
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        0.0,
+        white.clone(),
+    ));
+    world.push(Quad::new(
+        Plane::XZ,
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    ));
+    world.push(Quad::new(
+        Plane::XY,
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    ));
+
+    let rect_light = FlipNormal::new(Quad::new(
+        Plane::XZ,
+        100.0,
+        455.0,
+        100.0,
+        455.0,
+        554.0,
+        light,
+    ));
+    let spehre0 = Sphere::new(Point3::new(488.0, 455.0, 368.0), 49.0, dielectric);
+    let cube0 = Cube::new(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(175.0, 175.0, 175.0),
+        white,
+    );
+    let tri0 = Triangle::new(
+        [
+            Vec3::new(0.0, 0.0, 465.0),
+            Vec3::new(555.0, 0.0, 465.0),
+            Vec3::new(278.0, 455.0, 555.0),
+        ],
+        metal,
+    );
+
+    world.push(rect_light.clone());
+    world.push(spehre0);
+    world.push(Translate::new(
+        Rotate::new(Axis::Y, cube0, 30.0),
+        Vec3::new(278.0, 0.0, 278.0),
+    ));
+    world.push(tri0);
+
+    let mut lights = HittableList::default();
+    lights.push(rect_light);
+
+    let bgcolor = Color::new(0.0, 0.0, 0.0);
+
+    let lookfrom = Point3::new(278.0, 278.0, -800.0);
+    let lookat = Point3::new(278.0, 278.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.01;
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        40.0,
+        ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
+        0.0,
+        1.0,
+    );
+
+    (Box::new(world), Box::new(lights), bgcolor, camera)
 }

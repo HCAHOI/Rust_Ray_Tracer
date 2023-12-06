@@ -1,5 +1,7 @@
+use rand::seq::SliceRandom;
+
 use crate::{
-    geom::ray::Ray,
+    geom::{ray::Ray, vec3::Vec3},
     hit::aabb::{surrounding_box, AABB},
     hit::hittable::{HitRecord, Hittable},
 };
@@ -39,5 +41,13 @@ impl Hittable for HittableList {
                 .bounding_box(t0, t1)
                 .map(|bbox| surrounding_box(&acc, &bbox))
         })
+    }
+
+    fn pdf_value(&self, o: Vec3, v: Vec3) -> f64 {
+        self.list.iter().map(|h| h.pdf_value(o, v)).sum::<f64>() / self.list.len() as f64
+    }
+
+    fn random(&self, o: Vec3) -> Vec3 {
+        self.list.choose(&mut rand::thread_rng()).unwrap().random(o)
     }
 }
