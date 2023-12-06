@@ -92,7 +92,6 @@ impl<H: Hittable> Hittable for Rotate<H> {
         let (_, a_axis, b_axis) = get_axis_index(&self.axis);
         let mut origin = r.origin();
         let mut direction = r.direction();
-
         origin.set(
             a_axis,
             self.cos_theta * r.origin().get(a_axis) - self.sin_theta * r.origin().get(b_axis),
@@ -102,6 +101,7 @@ impl<H: Hittable> Hittable for Rotate<H> {
             self.sin_theta * r.origin().get(a_axis) + self.cos_theta * r.origin().get(b_axis),
         );
 
+        // a_axis: 0        b_axis: 1
         direction.set(
             a_axis,
             self.cos_theta * r.direction().get(a_axis) - self.sin_theta * r.direction().get(b_axis),
