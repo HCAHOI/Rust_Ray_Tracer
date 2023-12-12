@@ -22,6 +22,10 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(IMAGE_WIDTH as u32, IMAGE_HEIGHT as u32);
     let bar = ProgressBar::new(IMAGE_HEIGHT);
 
+    // Timer
+    let start = std::time::Instant::now();
+
+    // Render
     for j in 0..IMAGE_HEIGHT {
         for i in 0..IMAGE_WIDTH {
             let pixel_color: Color = (0..SAMPLES_PER_PIXEL)
@@ -47,6 +51,14 @@ fn main() {
             ]);
         }
         bar.inc(1);
+        // Timer
+        let duration = start.elapsed();
+        // Estimated time remaining
+        let remaining = (duration.as_secs_f64() / (j + 1) as f64) * (IMAGE_HEIGHT - j - 1) as f64;
+        println!(
+            "Time elapsed is: {:?}, estimated time remaining is: {:?}",
+            duration, remaining
+        );
     }
 
     bar.finish();

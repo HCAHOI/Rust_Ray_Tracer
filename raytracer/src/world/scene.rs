@@ -380,8 +380,8 @@ fn cornell_test() -> (Box<dyn Hittable>, Box<dyn Hittable>, Color, Camera) {
     let gate_image_text = ImageTexture::new(data, nx, ny);
 
     let obj = Mesh::load_obj("/home/hoi/Desktop/courses/2023-2024-1/Computer Graphics/labs/Rust_Ray_Tracer/objects/teapot.obj", Vec3::new(208.0, 55.0, 208.0), 1.0, metal).unwrap();
-
     world.push(obj);
+
     world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 555.0, violet));
     world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 0.0, tomato));
     world.push(Quad::new(
