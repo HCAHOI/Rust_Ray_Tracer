@@ -62,7 +62,7 @@ impl Mesh {
 
                 Mesh::new(tri_positions, tri_indices.to_vec(), material)
             }
-            Err(err) => return Err(format!("Failed to load obj file: {}", err)),
+            Err(err) => return Err(format!("Failed to load obj: {}", err)),
         };
         Ok(models)
     }

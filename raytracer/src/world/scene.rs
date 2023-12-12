@@ -370,7 +370,7 @@ fn cornell_test() -> (Box<dyn Hittable>, Box<dyn Hittable>, Color, Camera) {
     let metal = Metal::new(Color::new(0.8, 0.85, 0.88), 0.02);
     let light = DiffuseLight::new(ConstantTexture::new(Color::new(1.0, 1.0, 0.88) * 2.0));
     let image = image::open(
-        "/home/hoi/Desktop/courses/2023-2024-1/Computer Graphics/labs/Rust_Ray_Tracer/objects/SJTU_East_Gate/albedo.png",
+        "/home/hoi/Desktop/courses/2023-2024-1/Computer Graphics/labs/Rust_Ray_Tracer/img/SJTU_gate.jpg",
     )
     .expect("image not found")
     .to_rgb8();
@@ -379,7 +379,7 @@ fn cornell_test() -> (Box<dyn Hittable>, Box<dyn Hittable>, Color, Camera) {
     let data = image.into_raw();
     let gate_image_text = ImageTexture::new(data, nx, ny);
 
-    let obj = Mesh::load_obj("/home/hoi/Desktop/courses/2023-2024-1/Computer Graphics/labs/Rust_Ray_Tracer/objects/SJTU_East_Gate/mesh.obj", Vec3::new(208.0, 55.0, 208.0), 0.1, Lambertian::new(gate_image_text)).unwrap();
+    let obj = Mesh::load_obj("/home/hoi/Desktop/courses/2023-2024-1/Computer Graphics/labs/Rust_Ray_Tracer/objects/teapot.obj", Vec3::new(208.0, 55.0, 208.0), 1.0, metal).unwrap();
 
     world.push(obj);
     world.push(Quad::new(Plane::YZ, 0.0, 555.0, 0.0, 555.0, 555.0, violet));
@@ -421,11 +421,11 @@ fn cornell_test() -> (Box<dyn Hittable>, Box<dyn Hittable>, Color, Camera) {
         554.0,
         light,
     ));
-    let spehre0 = Sphere::new(Point3::new(488.0, 455.0, 368.0), 49.0, dielectric);
+    let spehre0 = Sphere::new(Point3::new(50.0, 50.0, 50.0), 49.0, dielectric);
     let cube0 = Cube::new(
         Vec3::new(0.0, 0.0, 0.0),
         Vec3::new(175.0, 175.0, 175.0),
-        white,
+        Lambertian::new(gate_image_text),
     );
     let tri0 = Triangle::new(
         [
